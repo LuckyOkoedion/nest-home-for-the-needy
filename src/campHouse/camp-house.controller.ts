@@ -7,15 +7,18 @@ import {
   Body,
   Param,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { CampHouseService } from './camp-house.service';
 import { CreateCampHouseDto } from './dto/create-camp-house.dto';
 import { Response } from 'express';
+import { JwtAuthGuard } from 'src/middleware/auth/jwt-auth.guard';
 
 @Controller('/api/admin/camp-house')
 export class CampHouseController {
   constructor(private readonly campHouseService: CampHouseService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
   async createCampHouse(
     @Body() house: CreateCampHouseDto,
@@ -31,6 +34,8 @@ export class CampHouseController {
       console.log(error);
     }
   }
+
+  @UseGuards(JwtAuthGuard)
   @Get()
   async getAllCampHouses(@Res() res: Response) {
     try {
@@ -42,6 +47,8 @@ export class CampHouseController {
       console.log(error);
     }
   }
+
+  @UseGuards(JwtAuthGuard)
   @Get('/:campHouseId')
   async campHouseDetail(
     @Param('campHouseId') campHouseId,
@@ -58,6 +65,8 @@ export class CampHouseController {
       console.log(error);
     }
   }
+
+  @UseGuards(JwtAuthGuard)
   @Put('/:campHouseId')
   async editCampHouse(
     @Param('campHouseId') campHouseId,
@@ -74,6 +83,8 @@ export class CampHouseController {
       console.log(error);
     }
   }
+
+  @UseGuards(JwtAuthGuard)
   @Delete('/:campHouseId')
   async deleteCampHouse(
     @Param('campHouseId') campHouseId,

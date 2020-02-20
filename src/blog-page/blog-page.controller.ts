@@ -1,12 +1,22 @@
-import { Controller, Post, Get, Patch, Body, Res } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Patch,
+  Body,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { CreateBlogPageDto } from './dto/create-blog-page.dto';
 import { BlogPageService } from './blog-page.service';
 import { Response } from 'express';
+import { JwtAuthGuard } from 'src/middleware/auth/jwt-auth.guard';
 
 @Controller('/api/site/blog-page')
 export class BlogPageController {
   constructor(private readonly blogPageService: BlogPageService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
   async createBlogPage(
     @Body() blogPage: CreateBlogPageDto,
@@ -22,6 +32,7 @@ export class BlogPageController {
       console.log(error);
     }
   }
+
   @Get()
   async getBlogPage(@Res() res: Response) {
     try {
@@ -33,6 +44,8 @@ export class BlogPageController {
       console.log(error);
     }
   }
+
+  @UseGuards(JwtAuthGuard)
   @Patch()
   async updateBlogPage(@Body() edit, @Res() res: Response) {
     try {

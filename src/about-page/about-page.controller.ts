@@ -1,11 +1,22 @@
-import { Controller, Get, Patch, Post, Body, Res } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Body,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { AboutPageService } from './about-page.service';
 import { CreateAboutPageDto } from './dto/create-about-page.dto';
 import { Response } from 'express';
+import { JwtAuthGuard } from 'src/middleware/auth/jwt-auth.guard';
 
 @Controller('/api/site/about-page')
 export class AboutPageController {
   constructor(private readonly aboutPageService: AboutPageService) {}
+
+  @UseGuards(JwtAuthGuard)
   @Post()
   async create(
     @Body() createAboutPageDto: CreateAboutPageDto,
@@ -23,6 +34,7 @@ export class AboutPageController {
       console.log(error);
     }
   }
+
   @Get()
   async findAll(@Res() res: Response) {
     try {
@@ -34,6 +46,8 @@ export class AboutPageController {
       console.log(error);
     }
   }
+
+  @UseGuards(JwtAuthGuard)
   @Patch()
   async edit(@Body() data, @Res() res: Response) {
     try {

@@ -7,14 +7,18 @@ import {
   Put,
   Param,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { DonationService } from './donation.service';
 import { CreateDonationDto } from './dto/create-donation.dto';
 import { Response } from 'express';
+import { JwtAuthGuard } from 'src/middleware/auth/jwt-auth.guard';
 
 @Controller('/api/admin/donation')
 export class DonationController {
   constructor(private readonly donationService: DonationService) {}
+
+  @UseGuards(JwtAuthGuard)
   @Post()
   async createDonation(
     @Body() donation: CreateDonationDto,
@@ -30,6 +34,8 @@ export class DonationController {
       console.log(error);
     }
   }
+
+  @UseGuards(JwtAuthGuard)
   @Get()
   async getAllDonation(@Res() res: Response) {
     try {
@@ -54,6 +60,8 @@ export class DonationController {
       console.log(error);
     }
   }
+
+  @UseGuards(JwtAuthGuard)
   @Put('/:donationId')
   async updateDonation(
     @Param('donationId') donationId,
@@ -70,6 +78,8 @@ export class DonationController {
       console.log(error);
     }
   }
+
+  @UseGuards(JwtAuthGuard)
   @Delete('/:donationId')
   async deleteDonation(@Param('donationId') donationId, @Res() res: Response) {
     try {

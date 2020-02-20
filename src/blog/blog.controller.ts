@@ -9,12 +9,13 @@ import {
   Res,
   Put,
   ExecutionContext,
-  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { BlogService } from './blog.service';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { Response } from 'express';
 import { RequestWithUserData } from 'express.interface';
+import { JwtAuthGuard } from 'src/middleware/auth/jwt-auth.guard';
 
 @Controller('/api/admin/blog')
 export class BlogController {
@@ -28,6 +29,8 @@ export class BlogController {
     this.req = httpContext.getRequest();
     this.userId = this.req.userData.userId;
   }
+
+  @UseGuards(JwtAuthGuard)
   @Post()
   async create(@Body() createBlogDto: CreateBlogDto, @Res() res: Response) {
     try {
@@ -40,6 +43,8 @@ export class BlogController {
       console.log(error);
     }
   }
+
+  @UseGuards(JwtAuthGuard)
   @Post('/:blogId/comment')
   async comment(
     @Body()
@@ -99,6 +104,7 @@ export class BlogController {
     }
   }
 
+  @UseGuards(JwtAuthGuard)
   @Put('/:blogId/comment/:commentId/editOwn')
   async editComment(
     @Body()
@@ -123,6 +129,7 @@ export class BlogController {
     }
   }
 
+  @UseGuards(JwtAuthGuard)
   @Put('/:blogId/othersComment/:commentId/editOthers')
   async editOthersComment(
     @Body()
@@ -146,6 +153,7 @@ export class BlogController {
     }
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch('/:blogId')
   async editBlog(@Body() blog, @Param('blogId') blogId, @Res() res: Response) {
     try {
@@ -159,6 +167,7 @@ export class BlogController {
     }
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch('/:blogId/approve')
   async approveOrDisapproveBlog(
     @Body() value: boolean,
@@ -178,6 +187,8 @@ export class BlogController {
       console.log(error);
     }
   }
+
+  @UseGuards(JwtAuthGuard)
   @Put('/:blogId/:commentId/show')
   async showComment(
     value = false,
@@ -198,6 +209,7 @@ export class BlogController {
     }
   }
 
+  @UseGuards(JwtAuthGuard)
   @Put('/:blogId/:commentId/hide')
   async hideComment(
     value = true,
@@ -218,6 +230,7 @@ export class BlogController {
     }
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete('/:blogId')
   async deleteBlog(@Param('blogId') blogId, @Res() res: Response) {
     await this.blogService.deleteBlog(blogId).then(() => {
@@ -227,6 +240,7 @@ export class BlogController {
     });
   }
 
+  @UseGuards(JwtAuthGuard)
   @Put('/:blogId/comment/:commentId/delete')
   // Delete comment is a patch request because it does not delete the blog, it only removes a comment
   async deleteComment(

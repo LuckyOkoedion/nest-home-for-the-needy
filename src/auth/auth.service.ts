@@ -1,6 +1,5 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { IUserData } from 'src/user/interfaces/user.interface';
 import { UserService } from 'src/user/user.service';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from 'src/user/dto/create-user.dto';
@@ -11,30 +10,6 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly userService: UserService,
   ) {}
-
-  async signJwt(payload: IUserData) {
-    try {
-      let result: string;
-      await this.jwtService.signAsync(payload).then(value => {
-        result = value;
-      });
-      return result;
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
-  async verifyJwtAndReturnPayloadDecoded(token: string) {
-    let result;
-    try {
-      await this.jwtService.verifyAsync(token).then(value => {
-        result = value;
-      });
-      return result;
-    } catch (error) {
-      console.log(error);
-    }
-  }
 
   async validateUser(email: string): Promise<any> {
     const result = await this.userService.findUserWithEmail(email);
@@ -68,7 +43,7 @@ export class AuthService {
       })
       .then(async result => {
         if (result) {
-          const authToken = await this.signJwt(payload);
+          const authToken = await this.jwtService.sign(payload);
           // authToken = await jwt.sign(userData, jwtConstants.secret, {
           //   expiresIn: '1h',
           // });
