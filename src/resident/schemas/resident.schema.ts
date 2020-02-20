@@ -1,7 +1,10 @@
 import * as mongoose from 'mongoose';
 
 export const ResidentSchema = new mongoose.Schema({
-    _id: mongoose.Schema.Types.ObjectId,
+    _id:  {
+      type: mongoose.Schema.Types.ObjectId,
+      default: new mongoose.Types.ObjectId(),
+    },
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     otherName: { type: String, required: true },

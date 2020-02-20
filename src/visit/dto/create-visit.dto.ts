@@ -1,18 +1,19 @@
-import { CreateUserDto } from "../../user/dto/create-user.dto";
-import { IsNotEmpty, IsArray } from 'class-validator';
+import { IsNotEmpty, IsObject, IsDate, IsString } from 'class-validator';
 
 export class CreateVisitDto {
-  @IsArray()
+  @IsDate()
   @IsNotEmpty()
-  visits: [
-    {
-      readonly id: string;
-      readonly date: Date;
-      readonly time: Date;
-      readonly ipAddress: string;
-      readonly ipState: string;
-      readonly userId?: string;
-      readonly ipDevice: string;
-    }
-  ];
+  readonly date: Date;
+  @IsDate()
+  @IsNotEmpty()
+  readonly time: Date;
+  @IsString()
+  @IsNotEmpty()
+  readonly ipAddress: string;
+  @IsString()
+  readonly ipState?: string;
+  @IsString()
+  readonly userId?: string;
+  @IsString()
+  readonly ipDevice?: string;
 }

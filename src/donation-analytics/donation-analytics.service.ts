@@ -18,15 +18,13 @@ export class DonationAnalyticsService {
   async createDonationAnalyticsDocument(doc: CreateDonationAnalyticsDto) {
     //Ensure that there is only one instance of the document in the database.
     const numberOfDocuments = await this.DonationAnalyticsModel.estimatedDocumentCount();
-    if (
-      !numberOfDocuments ||
-      numberOfDocuments === undefined ||
-      numberOfDocuments < 1 ||
-      numberOfDocuments <= 0
-    ) {
-      const createdAnalyticsDoc = await new this.DonationAnalyticsModel(doc);
-      return createdAnalyticsDoc.save();
-    } else {
+    if (numberOfDocuments < 1) {
+      const createdDonationAnalytics = await new this.DonationAnalyticsModel(
+        doc,
+      );
+      return createdDonationAnalytics.save();
+    }
+    if (numberOfDocuments >= 1) {
       console.log(
         'An instance of this document already exists. You cannot have more than one.',
       );

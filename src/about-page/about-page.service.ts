@@ -12,21 +12,20 @@ export class AboutPageService {
   async createAboutPageData(aboutPage: CreateAboutPageDto) {
     //Ensure that there is only one instance of the document in the database.
     const numberOfDocuments = await this.AboutPageModel.estimatedDocumentCount();
-    if (!numberOfDocuments ||
-      numberOfDocuments === undefined ||
-      numberOfDocuments < 1 ||
-      numberOfDocuments <= 0) {
+    if (numberOfDocuments < 1) {
       const createdAboutPage = await new this.AboutPageModel(aboutPage);
-    return createdAboutPage.save();
-    } else {
-      console.log("An instance of this document already exists. You cannot have more than one.")
+      return createdAboutPage.save();
     }
-    
+    if (numberOfDocuments >= 1) {
+      console.log(
+        'An instance of this document already exists. You cannot have more than one.',
+      );
+    }
   }
 
   async getAboutPageData() {
     const result = await this.AboutPageModel.findOne().exec();
-    return result[0]
+    return result[0];
   }
 
   async updateAboutPageData(data) {

@@ -7,6 +7,7 @@ export const databaseProviders = [
       if (process.env.NODE_ENV === 'test') {
         await mongoose.connect('mongodb://localhost/test-home-for-the-needy', {
           useNewUrlParser: true,
+          useUnifiedTopology: true,
         });
       } else {
         return await mongoose.connect(

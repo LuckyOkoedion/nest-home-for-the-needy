@@ -1,110 +1,80 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { CreateUserDto, LoginDto } from './dto/create-user.dto';
 import { Model } from 'mongoose';
-import { IUser, IUserData } from './interfaces/user.interface';
+import { IUser, IUserBody } from './interfaces/user.interface';
 import * as bcrypt from 'bcrypt';
-import * as jwt from 'jsonwebtoken';
-import { jwtConstants } from '../middleware/auth/constants';
 
 @Injectable()
 export class UserService {
   constructor(@Inject('USER_MODEL') private readonly UserModel: Model<IUser>) {}
-  
-  async signUp(user: CreateUserDto, password: string) {
-    let createdUser: IUser;
-    //Search for user with email
-    await this.UserModel.find({ email: user.email })
-      .exec()
-      // Check if email exists on the web - ##### TODO ####
-      //If email exists on web and not already in db, Hash the password
-      .then(async returnedValue => {
-        if (returnedValue.length < 1) {
-          try {
-            await bcrypt.hash(password, 10).then(returnedValue => {
-              return returnedValue;
-            });
-          } catch (error) {
-            console.log(error);
-          }
-        }
-        const error = new Error();
-        error.message = 'User Exists !';
-        throw error;
-      })
-      //Create the user
-      .then(async passwordHash => {
-        try {
-          createdUser = await new this.UserModel({
-            firstName: user.firstName,
-            lastName: user.lastName,
-            gender: user.gender,
-            dateOfBirth: user.dateOfBirth,
-            email: user.email,
-            phoneNo: user.phoneNo,
-            password: passwordHash,
-            nationality: user.nationality,
-            religion: user.religion,
-            organisation: user.organisation,
-          }).save();
-        } catch (error) {
-          console.log(error);
-        }
-      });
-    //Send verification email #### TODO#
 
-    //return the response
-    return createdUser;
+  async signUp(userBody: IUserBody, password: string) {
+    // Make the first user created in the users collection a superuser with highest accessLevel = 1
+    const numberOfDocuments = await this.UserModel.estimatedDocumentCount();
+    if (numberOfDocuments < 1) {
+      //Create the user with the private 'createUser()' method detailed below
+      const createdUser = await this.createUser(userBody, password);
+      //Retrieve the userId
+      const userId = createdUser._id;
+      // Update the user with the highest accessLevel =1
+      return await this.UserModel.updateOne(
+        { _id: userId },
+        { $set: { accessLevel: 1 } },
+      ).exec();
+    }
+    // otherwise create this new user with lowest accessLevel =5
+    if (numberOfDocuments >= 1) {
+      return this.createUser(userBody, password);
+    }
   }
 
-  async logIn(login: LoginDto) {
-    let userData: IUserData = undefined;
-    // Search for user with email
-    return await this.UserModel.find({ email: login.email })
-      // if not found, return error
-      .exec()
-      .then(async user => {
-        if (user.length < 1) {
-          const error = new Error();
-          error.message = 'Auth Failed';
-          throw error;
-        }
-        userData.email = user[0].email;
-        userData.userId = user[0]._id;
-        userData.clearanceLevel = user[0].accessLevel;
-        // if found, bcrypt compare provided password with hashed password
-        return await bcrypt.compare(login.password, user[0].password);
-      })
-      .then(result => {
-        if (result) {
-          const authToken = jwt.sign(userData, jwtConstants.secret, {
-            expiresIn: '1h',
-          });
-          return authToken;
-        }
-        const error = new Error();
-        error.message = 'Auth Failed!';
-        throw error;
-      })
-      .catch(error => {
-        return error;
-      });
+  async findUserWithEmail(email) {
+    const result = await this.UserModel.find({ email: email }).exec();
+    return result;
   }
 
-  async getAllUsers() {}
+  async getAllUsers() {
+    return await this.UserModel.find().exec();
+  }
 
-  async getUserDetail(userId) {}
+  async getUserDetail(userId) {
+    return await this.UserModel.findById(userId).exec();
+  }
 
-  async editUser(userId, edit) {}
+  async editUser(userId, edit) {
+    return await this.UserModel.update({ _id: userId }, edit).exec();
+  }
 
-  async deleteUser(userId) {}
+  async deleteUser(userId) {
+    return await this.UserModel.remove({ _id: userId });
+  }
 
-  async makeEditor(userId, role = 2) {}
+  async makeEditor(userId, role = 2) {
+    return await this.UserModel.updateOne(
+      { _id: userId },
+      { $set: { accessLevel: role } },
+    ).exec();
+  }
 
-  async makeReader(userId, role = 5) {}
+  async makeReader(userId, role = 5) {
+    return await this.UserModel.updateOne(
+      { _id: userId },
+      { $set: { accessLevel: role } },
+    );
+  }
 
-  async makeContributor(userId, role = 4) {}
+  async makeContributor(userId, role = 4) {
+    return await this.UserModel.updateOne(
+      { _id: userId },
+      { $set: { accessLevel: role } },
+    );
+  }
 
-  async makeModerator(userId, role = 3) {}
+  async makeModerator(userId, role = 3) {
+    return await this.UserModel.updateOne(
+      { _id: userId },
+      { $set: { accessLevel: role } },
+    );
+  }
 
   // TODO
 
@@ -115,4 +85,69 @@ export class UserService {
   async sendPasswordChangeLink(email) {}
 
   async passwordChange(newPassword) {}
+
+  // Private methods
+
+  private async createUser(userBody: IUserBody, password: string) {
+    let createdUser: IUser;
+    //Search for user with email
+    await this.UserModel.find({ email: userBody.email })
+      .exec()
+      // Check if email exists on the web - ##### TODO ####
+      //If email exists on web and not already in db, Hash the password
+      .then(
+        async returnedValue => {
+          if (returnedValue.length < 1) {
+            try {
+              await bcrypt
+                .hash(password, 10)
+                .then(
+                  returnedValue => {
+                    return returnedValue;
+                  },
+                  hashRejectionReason => {
+                    console.log(hashRejectionReason);
+                  },
+                )
+                //Create the user
+                .then(
+                  async passwordHash => {
+                    try {
+                      createdUser = await new this.UserModel({
+                        firstName: userBody.firstName,
+                        lastName: userBody.lastName,
+                        gender: userBody.gender,
+                        dateOfBirth: userBody.dateOfBirth,
+                        email: userBody.email,
+                        phoneNo: userBody.phoneNo,
+                        password: passwordHash,
+                        nationality: userBody.nationality,
+                        religion: userBody.religion,
+                        organisation: userBody.organisation,
+                      }).save();
+                    } catch (error) {
+                      console.log(error);
+                    }
+                  },
+                  creationRejectionReason => {
+                    console.log(creationRejectionReason);
+                  },
+                );
+            } catch (error) {
+              console.log(error);
+            }
+          }
+          // const error = new Error();
+          // error.message = 'User Exists !';
+          // throw error;
+        },
+        afterfindRejectionReason => {
+          console.log(afterfindRejectionReason);
+        },
+      );
+    //Send verification email #### TODO#
+
+    //return the response
+    return createdUser;
+  }
 }

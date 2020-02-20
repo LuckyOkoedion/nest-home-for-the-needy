@@ -17,10 +17,12 @@ import { UserModule } from './user/user.module';
 import { VisitModule } from './visit/visit.module';
 import { VisitAnalyticsModule } from './visit-analytics/visit-analytics.module';
 import { CampHouseModule } from './campHouse/camp-house.module';
+import { AuthModule } from './middleware/auth/auth.module';
 
 @Module({
   imports: [
     AboutPageModule,
+    AuthModule,
     BlogModule,
     BlogPageModule,
     DatabaseModule,

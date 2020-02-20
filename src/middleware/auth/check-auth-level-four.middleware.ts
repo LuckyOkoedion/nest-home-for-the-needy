@@ -1,9 +1,15 @@
-import { Injectable, NestMiddleware } from "@nestjs/common";
-import { Request, Response } from "express";
+import { Injectable, NestMiddleware, Req, Res, ExecutionContext } from '@nestjs/common';
+import { Response } from 'express';
+import { RequestWithUserData } from 'express.interface';
 
 @Injectable()
 export class CheckAuthLevelFourMiddleware implements NestMiddleware {
-  use(req, res: Response, next: Function) {
+  req: RequestWithUserData;
+  constructor(private context: ExecutionContext) {
+    const httpContext = this.context.switchToHttp();
+    this.req = httpContext.getRequest();
+  }
+  use(@Req() req: RequestWithUserData = this.req, @Res() res: Response, next: Function) {
     // pass next if clearanceLevel in req.userData is <=4
     try {
       if (req.userData.clearanceLevel <= 4) {
@@ -18,11 +24,11 @@ export class CheckAuthLevelFourMiddleware implements NestMiddleware {
 
   private handleError(error: Error, next: Function) {
     if (error) {
-      error.message = "Auth Failed!!!";
+      error.message = 'Auth Failed!!!';
       next(error);
     } else {
       const error = new Error();
-      error.message = "Auth Failed !!!";
+      error.message = 'Auth Failed !!!';
       next(error);
     }
   }

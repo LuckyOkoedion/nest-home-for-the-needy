@@ -1,8 +1,11 @@
 import * as mongoose from 'mongoose';
 
 export const BlogSchema = new mongoose.Schema({
-  _id: mongoose.Schema.Types.ObjectId,
-  author: {
+  _id: {
+    type: mongoose.Schema.Types.ObjectId,
+    default: new mongoose.Types.ObjectId(),
+  },
+  authorUserId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
@@ -14,8 +17,11 @@ export const BlogSchema = new mongoose.Schema({
   timestamp: { type: Date, required: true },
   comments: [
     {
-      _id: mongoose.Schema.Types.ObjectId,
-      commenter: {
+      _id: {
+        type: String,
+        default: new mongoose.Types.ObjectId(),
+      },
+      commenterUserId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true,
@@ -23,6 +29,7 @@ export const BlogSchema = new mongoose.Schema({
       comment: { type: String, required: true },
       time: { type: Date, required: true },
       hide: { type: Boolean, default: false },
+      edited: { type: Boolean, default: false },
     },
   ],
   approved: { type: Boolean, default: false },

@@ -6,92 +6,154 @@ import {
   Delete,
   Body,
   Param,
+  Res,
+  Put,
+  ExecutionContext,
+  Req,
 } from '@nestjs/common';
 import { BlogService } from './blog.service';
 import { CreateBlogDto } from './dto/create-blog.dto';
-import { IBlogComment } from './interfaces/blog.interface';
-import { IUserData } from 'src/user/interfaces/user.interface';
+import { Response } from 'express';
+import { RequestWithUserData } from 'express.interface';
 
 @Controller('/api/admin/blog')
 export class BlogController {
-  constructor(private readonly blogService: BlogService) {}
+  userId: string;
+  req: RequestWithUserData;
+  constructor(
+    private readonly blogService: BlogService,
+    private readonly context: ExecutionContext,
+  ) {
+    const httpContext = this.context.switchToHttp();
+    this.req = httpContext.getRequest();
+    this.userId = this.req.userData.userId;
+  }
   @Post()
-  async create(@Body() createBlogDto: CreateBlogDto) {
+  async create(@Body() createBlogDto: CreateBlogDto, @Res() res: Response) {
     try {
-      await this.blogService.createBlog(createBlogDto);
+      await this.blogService.createBlog(createBlogDto, this.userId).then(() => {
+        res.status(201).json({
+          message: 'New blog created successfully',
+        });
+      });
     } catch (error) {
       console.log(error);
     }
   }
   @Post('/:blogId/comment')
   async comment(
-    @Body() comment: IBlogComment,
+    @Body()
+    comment: {
+      comment: string;
+    },
     @Param('blogId') blogId: string,
+    @Res() res: Response,
   ) {
+    const commenterUserId = this.userId;
     try {
-      await this.blogService.commentOnBlog(comment, blogId);
+      await this.blogService
+        .commentOnBlog(comment, blogId, commenterUserId)
+        .then(() => {
+          res.status(201).json({
+            message: 'new comment created successfully',
+          });
+        });
     } catch (error) {
       console.log(error);
     }
   }
 
   @Get()
-  async getAllBlog() {
+  async getAllBlog(@Res() res: Response) {
     try {
-      await this.blogService.getAllBlog();
+      const allBlogs = await this.blogService.getAllBlog();
+      if (allBlogs) {
+        res.status(200).json(allBlogs);
+      }
     } catch (error) {
       console.log(error);
     }
   }
 
   @Get('/:blogId')
-  async getBlogDetail(@Param('blogId') blogId) {
+  async getBlogDetail(@Param('blogId') blogId, @Res() res: Response) {
     try {
-      this.blogService.getBlogDetail(blogId);
+      const blogDetail = await this.blogService.getBlogDetail(blogId);
+      if (blogDetail) {
+        res.status(200).json(blogDetail);
+      }
     } catch (error) {
       console.log(error);
     }
   }
 
   @Get('/allComments/:blogId')
-  async getAllComments(@Param('blogId') blogId) {
+  async getAllComments(@Param('blogId') blogId, @Res() res: Response) {
     try {
-      this.blogService.getComments(blogId);
+      const allComments = await this.blogService.getComments(blogId);
+      if (allComments) {
+        res.status(200).json(allComments);
+      }
     } catch (error) {
       console.log(error);
     }
   }
 
-  @Patch('/:blogId/comment/:commentId')
+  @Put('/:blogId/comment/:commentId/editOwn')
   async editComment(
-    @Body() comment: string,
+    @Body()
+    comment: {
+      comment: string;
+    },
     @Param('commentId') commentId: string,
     @Param('blogId') blogId: string,
+    editorUserId = this.userId,
+    @Res() res: Response,
   ) {
     try {
-      this.blogService.editComment(blogId, comment, commentId);
+      await this.blogService
+        .editComment(blogId, comment.comment, commentId, editorUserId)
+        .then(() => {
+          res.status(200).json({
+            message: 'Own comment edited successfully',
+          });
+        });
     } catch (error) {
       console.log(error);
     }
   }
 
-  @Patch('/:blogId/othersComment/:commentId')
+  @Put('/:blogId/othersComment/:commentId/editOthers')
   async editOthersComment(
-    @Body() comment: string,
+    @Body()
+    comment: {
+      comment: string;
+    },
     @Param('blogId') blogId: string,
     @Param('commentId') commentId: string,
+    @Res() res: Response,
   ) {
     try {
-      this.blogService.editOthersComment(blogId, comment, commentId);
+      await this.blogService
+        .editOthersComment(blogId, comment.comment, commentId)
+        .then(() => {
+          res.status(200).json({
+            message: "Others' comment edited successfully",
+          });
+        });
     } catch (error) {
       console.log(error);
     }
   }
 
   @Patch('/:blogId')
-  async editBlog(@Body() blog, @Param('blogId') blogId) {
+  async editBlog(@Body() blog, @Param('blogId') blogId, @Res() res: Response) {
     try {
-      this.blogService.editBlog(blog, blogId);
+      await this.blogService.editBlog(blog, blogId).then(() => {
+        res.status(200).json({
+          message: 'blog edited successfully',
+        });
+      });
     } catch (error) {
       console.log(error);
     }
@@ -100,50 +162,82 @@ export class BlogController {
   @Patch('/:blogId/approve')
   async approveOrDisapproveBlog(
     @Body() value: boolean,
-    @Param('userData') userData: IUserData,
-    userId: string = userData.userId,
+    userId: string = this.userId,
     @Param('blogId') blogId: string,
+    @Res() res: Response,
   ) {
     try {
-      this.blogService.approveOrDisapproveBlog(value, blogId, userId);
+      await this.blogService
+        .approveOrDisapproveBlog(value, blogId, userId)
+        .then(() => {
+          res.status(200).json({
+            message: 'blog approved ):',
+          });
+        });
     } catch (error) {
       console.log(error);
     }
   }
-  @Patch('/:blogId/:commentId/show')
+  @Put('/:blogId/:commentId/show')
   async showComment(
     value = false,
     @Param('blogId') blogId,
     @Param('commentId') commentId,
+    @Res() res: Response,
   ) {
     try {
-      this.blogService.hideOrShowComment(value, blogId, commentId);
+      await this.blogService
+        .hideOrShowComment(value, blogId, commentId)
+        .then(() => {
+          res.status(200).json({
+            message: 'Comment set to show',
+          });
+        });
     } catch (error) {
       console.log(error);
     }
   }
 
-  @Patch('/:blogId/:commentId/hide')
+  @Put('/:blogId/:commentId/hide')
   async hideComment(
     value = true,
     @Param('blogId') blogId,
     @Param('commentId') commentId,
+    @Res() res: Response,
   ) {
     try {
-      this.blogService.hideOrShowComment(value, blogId, commentId);
+      await this.blogService
+        .hideOrShowComment(value, blogId, commentId)
+        .then(() => {
+          res.status(200).json({
+            message: 'Comment set to hide',
+          });
+        });
     } catch (error) {
       console.log(error);
     }
   }
 
   @Delete('/:blogId')
-  async deleteBlog(@Param('blogId') blogId) {
-    this.blogService.deleteBlog(blogId);
+  async deleteBlog(@Param('blogId') blogId, @Res() res: Response) {
+    await this.blogService.deleteBlog(blogId).then(() => {
+      res.status(200).json({
+        message: 'blog deleted successfully',
+      });
+    });
   }
 
-  @Patch('/:blogId/comment/:commentId')
+  @Put('/:blogId/comment/:commentId/delete')
   // Delete comment is a patch request because it does not delete the blog, it only removes a comment
-  async deleteComment(@Param('commentId') commentId, @Param('blogId') blogId) {
-    this.blogService.deleteComment(blogId, commentId);
+  async deleteComment(
+    @Param('commentId') commentId,
+    @Param('blogId') blogId,
+    @Res() res: Response,
+  ) {
+    await this.blogService.deleteComment(blogId, commentId).then(() => {
+      res.status(200).json({
+        message: 'Comment deleted successfully',
+      });
+    });
   }
 }

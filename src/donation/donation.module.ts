@@ -7,13 +7,13 @@ import {
 import { DonationService } from './donation.service';
 import { DonationController } from './donation.controller';
 import { CheckAuthLevelFiveMiddleware } from 'src/middleware/auth/check-auth-level-five.middleware';
-import { CheckAuthMiddleware } from 'src/middleware/auth/check-auth.middleware';
 import { CheckAuthLevelOneMiddleware } from 'src/middleware/auth/check-auth-level-one.middleware';
 import { donationProviders } from './donation.providers';
 import { DatabaseModule } from 'src/database/database.module';
+import { AuthModule } from 'src/middleware/auth/auth.module';
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, AuthModule],
   providers: [DonationService, ...donationProviders],
   controllers: [DonationController],
 })
@@ -23,17 +23,17 @@ export class DonationModule implements NestModule {
       .apply(CheckAuthLevelFiveMiddleware)
       .forRoutes({ path: '/api/admin/donation', method: RequestMethod.POST });
     consumer
-      .apply(CheckAuthMiddleware, CheckAuthLevelOneMiddleware)
+      .apply(CheckAuthLevelOneMiddleware)
       .forRoutes({ path: '/api/admin/donation', method: RequestMethod.GET });
-    consumer.apply(CheckAuthMiddleware, CheckAuthLevelOneMiddleware).forRoutes({
+    consumer.apply(CheckAuthLevelOneMiddleware).forRoutes({
       path: '/api/admin/donation/:donationId',
       method: RequestMethod.GET,
     });
-    consumer.apply(CheckAuthMiddleware, CheckAuthLevelOneMiddleware).forRoutes({
+    consumer.apply(CheckAuthLevelOneMiddleware).forRoutes({
       path: '/api/admin/donation/:donationId',
       method: RequestMethod.PUT,
     });
-    consumer.apply(CheckAuthMiddleware, CheckAuthLevelOneMiddleware).forRoutes({
+    consumer.apply(CheckAuthLevelOneMiddleware).forRoutes({
       path: '/api/admin/donation/:donationId',
       method: RequestMethod.DELETE,
     });

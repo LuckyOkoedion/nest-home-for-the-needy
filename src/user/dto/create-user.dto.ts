@@ -1,11 +1,4 @@
-import {
-  IsNotEmpty,
-  IsString,
-  IsDate,
-  IsNumber,
-  IsArray,
-  IsEmail,
-} from 'class-validator';
+import { IsNotEmpty, IsString, IsEmail } from 'class-validator';
 
 export class CreateUserDto {
   @IsString()
@@ -17,31 +10,17 @@ export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
   readonly gender: string;
-  @IsDate()
-  @IsNotEmpty()
-  readonly dateOfBirth: Date;
+  // Change to date type for production
+  // readonly dateOfBirth: string;
   @IsEmail()
   @IsNotEmpty()
   readonly email: string;
   @IsString()
   @IsNotEmpty()
-  readonly phoneNo: string;
-  @IsArray()
-  readonly ipAddressess?: [];
-  @IsArray()
-  readonly pageVisits?: [
-    {
-      readonly homePage: number;
-      readonly aboutPage: number;
-      readonly contactPage: number;
-      readonly donatePage: number;
-      readonly eventsPage: number;
-      readonly blogPage: number;
-      readonly projectsPage: number;
-    },
-  ];
+  password: string;
   @IsString()
-  readonly interest?: string;
+  @IsNotEmpty()
+  readonly phoneNo: string;
   @IsString()
   @IsNotEmpty()
   readonly nationality: string;
@@ -49,14 +28,7 @@ export class CreateUserDto {
   @IsNotEmpty()
   readonly religion: string;
   @IsString()
-  readonly organisation?: string;
-  @IsString()
-  readonly projectManagingProjectId?: string;
-  @IsString()
-  readonly type?: string;
-  @IsNumber()
-  @IsNotEmpty()
-  readonly accessLevel?: number;
+  readonly organisation: string;
 }
 
 export class LoginDto {

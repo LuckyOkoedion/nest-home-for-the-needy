@@ -11,15 +11,11 @@ export class HomePageService {
   async createHomePageData(homePage: CreateHomePageDto) {
     //Ensure that there is only one instance of the document in the database.
     const numberOfDocuments = await this.HomePageModel.estimatedDocumentCount();
-    if (
-      !numberOfDocuments ||
-      numberOfDocuments === undefined ||
-      numberOfDocuments < 1 ||
-      numberOfDocuments <= 0
-    ) {
+    if (numberOfDocuments < 1) {
       const createdHomePage = await new this.HomePageModel(homePage);
       return createdHomePage.save();
-    } else {
+    }
+    if (numberOfDocuments >= 1) {
       console.log(
         'An instance of this document already exists. You cannot have more than one.',
       );

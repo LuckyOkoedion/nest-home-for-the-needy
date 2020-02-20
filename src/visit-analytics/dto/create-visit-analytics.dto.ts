@@ -1,4 +1,3 @@
-import { CreateVisitDto } from '../../visit/dto/create-visit.dto';
 import {
   IsNotEmpty,
   IsObject,
@@ -62,9 +61,8 @@ export class CreateAnnualVisitSummaryDto {
 }
 
 export class CreateVisitAnalyticsDto {
-  @IsObject()
-  @IsNotEmpty()
-  readonly latestVisit: CreateVisitDto;
+  @IsString()
+  readonly latestVisitId?: string;
   @IsObject()
   @IsNotEmpty()
   readonly dailySummary: CreateDailyVisitSummaryDto;

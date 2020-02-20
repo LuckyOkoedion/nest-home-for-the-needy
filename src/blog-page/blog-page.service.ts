@@ -11,15 +11,11 @@ export class BlogPageService {
   async createBlogPageData(blogPage: CreateBlogPageDto) {
     //Ensure that there is only one instance of the document in the database.
     const numberOfDocuments = await this.BlogPageModel.estimatedDocumentCount();
-    if (
-      !numberOfDocuments ||
-      numberOfDocuments === undefined ||
-      numberOfDocuments < 1 ||
-      numberOfDocuments <= 0
-    ) {
+    if (numberOfDocuments < 1) {
       const createdBlogPage = await new this.BlogPageModel(blogPage);
       return createdBlogPage.save();
-    } else {
+    }
+    if (numberOfDocuments >= 1) {
       console.log(
         'An instance of this document already exists. You cannot have more than one.',
       );
@@ -32,6 +28,6 @@ export class BlogPageService {
   }
 
   async updateBlogPageData(edit) {
-    return await this.BlogPageModel.updateOne({},edit)
+    return await this.BlogPageModel.updateOne({}, edit);
   }
 }

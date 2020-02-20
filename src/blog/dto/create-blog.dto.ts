@@ -1,16 +1,6 @@
-import {
-  IsNotEmpty,
-  IsString,
-  IsDate,
-  IsBoolean,
-  IsObject,
-  IsArray,
-} from 'class-validator';
+import { IsNotEmpty, IsString, IsDate, IsObject } from 'class-validator';
 
 export class CreateBlogDto {
-  @IsString()
-  @IsNotEmpty()
-  readonly authorUserId: string;
   @IsString()
   @IsNotEmpty()
   readonly title: string;
@@ -23,28 +13,17 @@ export class CreateBlogDto {
   @IsString()
   @IsNotEmpty()
   readonly body: string;
-  @IsBoolean()
-  readonly approved?: Boolean;
-  @IsObject()
-  readonly approvedByUserId?: string;
-  @IsDate()
-  @IsNotEmpty()
   readonly timestamp: Date;
-  @IsArray()
-  readonly comments?: BlogCommentDto[];
 }
 
 export class BlogCommentDto {
   @IsObject()
   @IsNotEmpty()
-  readonly commenterUserId: string;
-  @IsString()
-  @IsNotEmpty()
-  readonly comment: string;
+  readonly comment: Object;
   @IsDate()
   @IsNotEmpty()
   readonly time: Date;
-  @IsBoolean()
+  @IsString()
   @IsNotEmpty()
-  readonly hide: Boolean;
+  readonly commenterUserId: string;
 }

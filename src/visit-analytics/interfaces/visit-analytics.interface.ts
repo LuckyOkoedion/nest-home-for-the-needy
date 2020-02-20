@@ -1,8 +1,7 @@
 import { Document } from 'mongoose';
-import { IVisit } from '../../visit/interfaces/visit.interface';
 
 export interface IVisitAnalytics extends Document {
-  readonly latestVisit: IVisit;
+  readonly latestVisitId?: string;
   readonly dailySummary: {
     readonly mostIpLocationCountry: string;
     readonly mostIpLocationState: string;

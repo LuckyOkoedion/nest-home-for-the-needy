@@ -40,3 +40,15 @@ export interface ILogin {
   email: string;
   password: string;
 }
+
+export interface IUserBody {
+  readonly firstName: string;
+  readonly lastName: string;
+  readonly gender: string;
+  readonly dateOfBirth: Date;
+  readonly email: string;
+  readonly phoneNo: string;
+  readonly nationality: string;
+  readonly religion: string;
+  readonly organisation: string;
+}

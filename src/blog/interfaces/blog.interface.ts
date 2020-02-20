@@ -17,4 +17,5 @@ export interface IBlogComment extends Document {
   readonly comment: string;
   readonly time: Date;
   readonly hide: Boolean;
+  readonly edited: Boolean
 }
