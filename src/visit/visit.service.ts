@@ -2,11 +2,12 @@ import { Injectable, Inject } from '@nestjs/common';
 import { CreateVisitDto } from './dto/create-visit.dto';
 import { Model } from 'mongoose';
 import { IVisit } from './interfaces/visit.interface';
+import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class VisitService {
   constructor(
-    @Inject('VISIT_MODEL') private readonly VisitModel: Model<IVisit>,
+    @InjectModel('Visit') private readonly VisitModel: Model<IVisit>,
   ) {}
   async createVisit(visit: CreateVisitDto) {
     const emptyVisitArray = { visits: [] };

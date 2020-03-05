@@ -1,12 +1,13 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { CreateHomePageDto } from './dto/create-home-page.dto';
+import { Injectable } from '@nestjs/common';
+import { CreateHomePageDto, EditHomePageDto } from './dto/create-home-page.dto';
 import { Model } from 'mongoose';
 import { IHomePage } from './interfaces/home-page.interface';
+import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class HomePageService {
   constructor(
-    @Inject('HOME_PAGE_MODEL') private readonly HomePageModel: Model<IHomePage>,
+    @InjectModel('HomePage') private readonly HomePageModel: Model<IHomePage>,
   ) {}
   async createHomePageData(homePage: CreateHomePageDto) {
     //Ensure that there is only one instance of the document in the database.
@@ -16,7 +17,7 @@ export class HomePageService {
       return createdHomePage.save();
     }
     if (numberOfDocuments >= 1) {
-      console.log(
+      throw new Error(
         'An instance of this document already exists. You cannot have more than one.',
       );
     }
@@ -27,7 +28,7 @@ export class HomePageService {
     return result[0];
   }
 
-  async updateHomePageData(edit) {
+  async updateHomePageData(edit: EditHomePageDto) {
     return await this.HomePageModel.updateOne({}, edit).exec();
   }
 }

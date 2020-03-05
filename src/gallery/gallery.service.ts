@@ -1,12 +1,13 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
 import { CreateGalleryDto } from './dto/create-gallery.dto';
 import { Model } from 'mongoose';
 import { IGallery } from './interfaces/gallery.interface';
+import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class GalleryService {
   constructor(
-    @Inject('GALLERY_MODEL') private readonly GalleryModel: Model<IGallery>,
+    @InjectModel('Gallery') private readonly GalleryModel: Model<IGallery>,
   ) {}
   async uploadPicture(picture: CreateGalleryDto) {
     const createdPicture = await new this.GalleryModel(picture);

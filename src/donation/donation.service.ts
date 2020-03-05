@@ -1,12 +1,13 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateDonationDto } from './dto/create-donation.dto';
 import { Model } from 'mongoose';
 import { IDonation } from './interfaces/donation.interface';
+import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class DonationService {
   constructor(
-    @Inject('DONATION_MODEL') private readonly DonationModel: Model<IDonation>,
+    @InjectModel('Donation') private readonly DonationModel: Model<IDonation>,
   ) {}
   async createDonation(donation: CreateDonationDto) {
     const createdDonation = await new this.DonationModel(donation);

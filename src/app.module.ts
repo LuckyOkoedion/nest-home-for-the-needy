@@ -4,9 +4,7 @@ import { AppService } from './app.service';
 import { AboutPageModule } from './about-page/about-page.module';
 import { BlogModule } from './blog/blog.module';
 import { BlogPageModule } from './blog-page/blog-page.module';
-import { DatabaseModule } from './database/database.module';
 import { DonationModule } from './donation/donation.module';
-import { DonationAnalyticsModule } from './donation-analytics/donation-analytics.module';
 import { EventModule } from './event/event.module';
 import { GalleryModule } from './gallery/gallery.module';
 import { HomePageModule } from './home-page/home-page.module';
@@ -15,19 +13,25 @@ import { ProjectModule } from './project/project.module';
 import { ResidentModule } from './resident/resident.module';
 import { UserModule } from './user/user.module';
 import { VisitModule } from './visit/visit.module';
-import { VisitAnalyticsModule } from './visit-analytics/visit-analytics.module';
 import { CampHouseModule } from './campHouse/camp-house.module';
-import { AuthModule } from './middleware/auth/auth.module';
+import { AuthModule } from './auth/auth.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { MulterModule } from '@nestjs/platform-express';
 
 @Module({
   imports: [
+    MongooseModule.forRoot('mongodb://localhost/home-for-the-needy', {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    }),
+    MulterModule.register({
+      dest: './files',
+    }),
     AboutPageModule,
     AuthModule,
     BlogModule,
     BlogPageModule,
-    DatabaseModule,
     DonationModule,
-    DonationAnalyticsModule,
     EventModule,
     GalleryModule,
     HomePageModule,
@@ -36,7 +40,6 @@ import { AuthModule } from './middleware/auth/auth.module';
     ResidentModule,
     UserModule,
     VisitModule,
-    VisitAnalyticsModule,
     CampHouseModule,
   ],
   controllers: [AppController],

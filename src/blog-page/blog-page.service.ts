@@ -1,12 +1,13 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateBlogPageDto } from './dto/create-blog-page.dto';
 import { Model } from 'mongoose';
 import { IBlogPage } from './interfaces/blog-page.interface';
+import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class BlogPageService {
   constructor(
-    @Inject('BLOG_PAGE_MODEL') private readonly BlogPageModel: Model<IBlogPage>,
+    @InjectModel('BlogPage') private readonly BlogPageModel: Model<IBlogPage>,
   ) {}
   async createBlogPageData(blogPage: CreateBlogPageDto) {
     //Ensure that there is only one instance of the document in the database.
@@ -16,7 +17,7 @@ export class BlogPageService {
       return createdBlogPage.save();
     }
     if (numberOfDocuments >= 1) {
-      console.log(
+      throw new Error(
         'An instance of this document already exists. You cannot have more than one.',
       );
     }

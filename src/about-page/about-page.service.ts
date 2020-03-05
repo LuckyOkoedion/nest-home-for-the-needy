@@ -1,12 +1,16 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Model } from 'mongoose';
-import { CreateAboutPageDto } from './dto/create-about-page.dto';
+import {
+  CreateAboutPageDto,
+  EditAboutPageDto,
+} from './dto/create-about-page.dto';
 import { IAboutPage } from './interfaces/about-page.interface';
+import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class AboutPageService {
   constructor(
-    @Inject('ABOUT_PAGE_MODEL')
+    @InjectModel('AboutPage')
     private readonly AboutPageModel: Model<IAboutPage>,
   ) {}
   async createAboutPageData(aboutPage: CreateAboutPageDto) {
@@ -17,7 +21,7 @@ export class AboutPageService {
       return createdAboutPage.save();
     }
     if (numberOfDocuments >= 1) {
-      console.log(
+      throw new Error(
         'An instance of this document already exists. You cannot have more than one.',
       );
     }
@@ -28,7 +32,7 @@ export class AboutPageService {
     return result[0];
   }
 
-  async updateAboutPageData(data) {
+  async updateAboutPageData(data: EditAboutPageDto) {
     return await this.AboutPageModel.update({}, data).exec();
   }
 }

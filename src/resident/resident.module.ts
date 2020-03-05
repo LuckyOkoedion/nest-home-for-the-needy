@@ -1,13 +1,16 @@
 import { Module } from '@nestjs/common';
 import { ResidentController } from './resident.controller';
 import { ResidentService } from './resident.service';
-import { residentProviders } from './resident.providers';
-import { DatabaseModule } from 'src/database/database.module';
 import { AuthModule } from 'src/auth/auth.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { ResidentSchema } from './schemas/resident.schema';
 
 @Module({
-  imports: [DatabaseModule, AuthModule],
+  imports: [
+    MongooseModule.forFeature([{ name: 'Resident', schema: ResidentSchema }]),
+    AuthModule,
+  ],
   controllers: [ResidentController],
-  providers: [ResidentService, ...residentProviders],
+  providers: [ResidentService],
 })
 export class ResidentModule {}

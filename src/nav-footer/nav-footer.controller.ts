@@ -1,13 +1,29 @@
-import { Controller, Post, Patch, Get, Body, Res } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Patch,
+  Get,
+  Body,
+  Res,
+  UseGuards,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { NavFooterService } from './nav-footer.service';
 import { CreateNavFooterDto } from './dto/create-nav-footer.dto';
 import { Response } from 'express';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { PermissionsGuard } from 'src/auth/permissions.guard';
+import { Permissions } from 'src/auth/permissions.decorator';
+import { permissionsEnum } from 'src/utils/permissions.enum';
 
 @Controller('/api/site/nav-footer')
 export class NavFooterController {
   constructor(private readonly navFooterService: NavFooterService) {}
 
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Post()
+  @Permissions(permissionsEnum.CREATE_PUBLIC_SITE_DATA)
   async createNavFooter(
     @Body() navFooter: CreateNavFooterDto,
     @Res() res: Response,
@@ -19,9 +35,10 @@ export class NavFooterController {
         });
       });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_IMPLEMENTED);
     }
   }
+
   @Get()
   async getNavFooter(@Res() res: Response) {
     try {
@@ -30,10 +47,13 @@ export class NavFooterController {
         res.status(200).json(result);
       }
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
     }
   }
+
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Patch()
+  @Permissions(permissionsEnum.UPDATE_PUBLIC_SITE_DATA)
   async editNavFooter(@Body() edit, @Res() res: Response) {
     try {
       await this.navFooterService.updateNavFooterData(edit).then(() => {
@@ -42,7 +62,7 @@ export class NavFooterController {
         });
       });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_MODIFIED);
     }
   }
 }

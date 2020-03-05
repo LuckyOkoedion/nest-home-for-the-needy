@@ -3,13 +3,13 @@ import {
 } from '@nestjs/common';
 import { GalleryController } from './gallery.controller';
 import { GalleryService } from './gallery.service';
-import { galleryProviders } from './gallery.providers';
-import { DatabaseModule } from 'src/database/database.module';
 import { AuthModule } from 'src/auth/auth.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { GallerySchema } from './schemas/gallery.schema';
 
 @Module({
-  imports: [DatabaseModule, AuthModule],
+  imports: [MongooseModule.forFeature([{ name: 'Gallery', schema: GallerySchema }]), AuthModule],
   controllers: [GalleryController],
-  providers: [GalleryService, ...galleryProviders],
+  providers: [GalleryService],
 })
 export class GalleryModule  {}

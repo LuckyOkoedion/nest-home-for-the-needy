@@ -1,13 +1,16 @@
 import { Module } from '@nestjs/common';
 import { AboutPageController } from './about-page.controller';
 import { AboutPageService } from './about-page.service';
-import { aboutPageProviders } from './about-page.providers';
-import { DatabaseModule } from 'src/database/database.module';
 import { AuthModule } from 'src/auth/auth.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { AboutPageSchema } from './schemas/about-page.schema';
 
 @Module({
-  imports: [DatabaseModule, AuthModule],
+  imports: [
+    MongooseModule.forFeature([{ name: 'AboutPage', schema: AboutPageSchema }]),
+    AuthModule,
+  ],
   controllers: [AboutPageController],
-  providers: [AboutPageService, ...aboutPageProviders],
+  providers: [AboutPageService],
 })
 export class AboutPageModule {}

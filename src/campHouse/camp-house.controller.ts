@@ -8,18 +8,24 @@ import {
   Param,
   Res,
   UseGuards,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { CampHouseService } from './camp-house.service';
 import { CreateCampHouseDto } from './dto/create-camp-house.dto';
 import { Response } from 'express';
-import { JwtAuthGuard } from 'src/middleware/auth/jwt-auth.guard';
+import { Permissions } from 'src/auth/permissions.decorator';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { PermissionsGuard } from 'src/auth/permissions.guard';
+import { permissionsEnum } from 'src/utils/permissions.enum';
 
 @Controller('/api/admin/camp-house')
 export class CampHouseController {
   constructor(private readonly campHouseService: CampHouseService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Post()
+  @Permissions(permissionsEnum.CREATE_INTERNAL_DATA)
   async createCampHouse(
     @Body() house: CreateCampHouseDto,
     @Res() res: Response,
@@ -31,12 +37,13 @@ export class CampHouseController {
         });
       });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.EXPECTATION_FAILED);
     }
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Get()
+  @Permissions(permissionsEnum.READ_INTERNAL_DATA)
   async getAllCampHouses(@Res() res: Response) {
     try {
       const allCampHouses = await this.campHouseService.getAllCampHouses();
@@ -44,17 +51,19 @@ export class CampHouseController {
         res.status(200).json(allCampHouses);
       }
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
     }
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Get('/:campHouseId')
+  @Permissions(permissionsEnum.READ_INTERNAL_DATA)
   async campHouseDetail(
-    @Param('campHouseId') campHouseId,
+    @Param() params,
     @Res() res: Response,
   ) {
     try {
+      const campHouseId = params.campHouseId;
       const campHouseDetail = await this.campHouseService.getCampHouseDetail(
         campHouseId,
       );
@@ -62,42 +71,46 @@ export class CampHouseController {
         res.status(200).json(campHouseDetail);
       }
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
     }
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Put('/:campHouseId')
+  @Permissions(permissionsEnum.UPDATE_INTERNAL_DATA)
   async editCampHouse(
-    @Param('campHouseId') campHouseId,
+    @Param() params,
     @Body() edit,
     @Res() res: Response,
   ) {
     try {
+      const campHouseId = params.campHouseId;
       await this.campHouseService.editCampHouse(campHouseId, edit).then(() => {
         res.status(200).json({
           message: 'A camp house edited successfully',
         });
       });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_MODIFIED);
     }
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Delete('/:campHouseId')
+  @Permissions(permissionsEnum.DELETE_INTERNAL_DATA)
   async deleteCampHouse(
-    @Param('campHouseId') campHouseId,
+    @Param() params,
     @Res() res: Response,
   ) {
     try {
+      const campHouseId = params.campHouseId;
       await this.campHouseService.deleteCampHouse(campHouseId).then(() => {
         res.status(200).json({
           message: 'A camp house deleted successfully',
         });
       });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_IMPLEMENTED);
     }
   }
 }

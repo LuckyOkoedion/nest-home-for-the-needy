@@ -9,6 +9,7 @@ export interface IResident extends Document {
   readonly campHouseId?: string;
   readonly gallery: [
     {
+      readonly _id: string;
       readonly picture: string;
       readonly pictureName: string;
       readonly dateCaptured: string;
@@ -27,12 +28,14 @@ export interface IResident extends Document {
   readonly public: boolean;
   readonly relatedCoResident?: [
     {
+      readonly _id: string;
       readonly relativeUserId: string;
       readonly relationship: string;
     },
   ];
   readonly personalSponsor?: [
     {
+      readonly _id: string;
       readonly sponsorUserId: string;
       readonly purposeOfSponsorship: string;
       readonly donations: [

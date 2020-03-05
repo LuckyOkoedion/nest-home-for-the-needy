@@ -1,10 +1,18 @@
-import { Controller, Get, Post, Body, Res } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Res,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { AppService } from './app.service';
 import { LoginDto } from './user/dto/create-user.dto';
-import { AuthService } from './middleware/auth/auth.service';
-import {Response } from 'express';
+import { Response } from 'express';
+import { AuthService } from './auth/auth.service';
 
-@Controller('/api')
+@Controller('api')
 export class AppController {
   constructor(
     private readonly appService: AppService,
@@ -16,7 +24,7 @@ export class AppController {
     return this.appService.getHello();
   }
 
-  @Post('/auth/login')
+  @Post('/login')
   async login(@Body() login: LoginDto, @Res() res: Response) {
     try {
       const authToken = await this.authService.logIn(login);
@@ -29,7 +37,7 @@ export class AppController {
         res.status(404).json(authToken);
       }
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.FORBIDDEN);
     }
   }
 }

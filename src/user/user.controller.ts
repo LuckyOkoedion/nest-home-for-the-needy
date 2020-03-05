@@ -7,15 +7,34 @@ import {
   Body,
   Param,
   Res,
+  UseGuards,
+  Request,
+  UseInterceptors,
+  UploadedFile,
+  HttpException,
+  HttpStatus,
+  Inject,
+  Scope,
 } from '@nestjs/common';
-import { CreateUserDto, LoginDto } from './dto/create-user.dto';
+import { CreateUserDto, EditUserDto } from './dto/create-user.dto';
 import { UserService } from './user.service';
 import { Response } from 'express';
 import { IUser } from './interfaces/user.interface';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { PermissionsGuard } from 'src/auth/permissions.guard';
+import { Permissions } from 'src/auth/permissions.decorator';
+import { RequestWithUserData } from 'express.interface';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { imageFileFilter } from 'src/utils/file-uploading.utils';
+import { REQUEST } from '@nestjs/core';
+import { permissionsEnum } from 'src/utils/permissions.enum';
 
-@Controller('/api/admin/user')
+@Controller({ path: '/api/admin/user', scope: Scope.REQUEST })
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    @Inject(REQUEST) private readonly req: RequestWithUserData,
+  ) {}
 
   @Post('/register')
   async signUp(@Body() user: CreateUserDto, @Res() res: Response) {
@@ -52,11 +71,13 @@ export class UserController {
         res.status(201).json(toReturn);
       }
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_ACCEPTABLE);
     }
   }
 
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Get()
+  @Permissions(permissionsEnum.READ_USERPROFILES)
   async getAllUsers(@Res() res: Response) {
     try {
       const allUsers = await this.userService.getAllUsers();
@@ -77,12 +98,16 @@ export class UserController {
         res.status(200).json(cleanedData);
       }
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
     }
   }
+
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Get('/:userId/profile')
-  async userDetail(@Param('userId') userId, @Res() res: Response) {
+  @Permissions(permissionsEnum.READ_USERPROFILES)
+  async userDetail(@Param() params, @Res() res: Response) {
     try {
+      const userId = params.userId;
       const userProfile: IUser = await this.userService.getUserDetail(userId);
 
       if (userProfile) {
@@ -100,24 +125,66 @@ export class UserController {
         res.status(200).json(toReturn);
       }
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
     }
   }
-  @Put('/:userId/edit')
-  async editUser(@Param('userId') userId, @Body() edit, @Res() res: Response) {
+
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Put('/:userId/editOthers')
+  @Permissions(permissionsEnum.MANAGE_USERS)
+  async editUser(@Param() params, @Body() edit, @Res() res: Response) {
     try {
+      const userId = params.userId;
       await this.userService.editUser(userId, edit).then(() => {
         res.status(200).json({
           message: 'User edited successfully',
         });
       });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_MODIFIED);
     }
   }
-  @Put('/:userId/make-editor')
-  async makeEditor(@Param('userId') userId, @Res() res: Response) {
+
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Put('/:userId/editOwnProfile')
+  @Permissions(permissionsEnum.MANAGE_OWN_PROFILE)
+  @UseInterceptors(
+    FileInterceptor('profilePic', {
+      fileFilter: imageFileFilter,
+    }),
+  )
+  async editOwnProfile(
+    @Param() params,
+    @Body() edit: EditUserDto,
+    @Res() res: Response,
+    @UploadedFile() file?,
+  ) {
     try {
+      const userId = params.userId;
+      let theEdit: EditUserDto;
+      const profilePic = file.name;
+      if (file) {
+        theEdit = { ...edit, profilePic: profilePic };
+      } else {
+        theEdit = { ...edit };
+      }
+
+      await this.userService.editOwnProfile(userId, theEdit).then(() => {
+        res.status(200).json({
+          message: 'Your profile has been edited successfully',
+        });
+      });
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.NOT_MODIFIED);
+    }
+  }
+
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Put('/:userId/make-editor')
+  @Permissions(permissionsEnum.MANAGE_USERS)
+  async makeEditor(@Param() params, @Res() res: Response) {
+    try {
+      const userId = params.userId;
       await this.userService.makeEditor(userId).then(async user => {
         const theUser = await this.userService.getUserDetail(userId);
         res.status(200).json({
@@ -125,64 +192,90 @@ export class UserController {
         });
       });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_IMPLEMENTED);
     }
   }
+
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Put('/:userId/make-user')
-  async makeReader(@Param('userId') userId, @Res() res: Response) {
+  @Permissions(permissionsEnum.MANAGE_USERS)
+  async makeReader(@Param() params, @Res() res: Response) {
     try {
-      const user = await this.userService
-        .makeReader(userId)
-        .then(async user => {
-          const theUser = await this.userService.getUserDetail(userId);
-          res.status(200).json({
-            message: `${theUser.firstName} ${theUser.lastName} has been made an ordinary user successfully`,
-          });
+      const userId = params.userId;
+      await this.userService.makeReader(userId).then(async user => {
+        const theUser = await this.userService.getUserDetail(userId);
+        res.status(200).json({
+          message: `${theUser.firstName} ${theUser.lastName} has been made an ordinary user successfully`,
         });
+      });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_IMPLEMENTED);
     }
   }
+
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Put('/:userId/make-contributor')
-  async makeContributor(@Param('userId') userId, @Res() res: Response) {
+  @Permissions(permissionsEnum.MANAGE_USERS)
+  async makeContributor(@Param() params, @Res() res: Response) {
     try {
-      const user = await this.userService
-        .makeContributor(userId)
-        .then(async user => {
-          const theUser = await this.userService.getUserDetail(userId);
-          res.status(200).json({
-            message: `${theUser.firstName} ${theUser.lastName} has been made a contributor successfully`,
-          });
+      const userId = params.userId;
+      await this.userService.makeContributor(userId).then(async user => {
+        const theUser = await this.userService.getUserDetail(userId);
+        res.status(200).json({
+          message: `${theUser.firstName} ${theUser.lastName} has been made a contributor successfully`,
         });
+      });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_IMPLEMENTED);
     }
   }
+
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Put('/:userId/make-moderator')
-  async makeModerator(@Param('userId') userId, @Res() res: Response) {
+  @Permissions(permissionsEnum.MANAGE_USERS)
+  async makeModerator(@Param() params, @Res() res: Response) {
     try {
-      const user = await this.userService
-        .makeModerator(userId)
-        .then(async user => {
-          const theUser = await this.userService.getUserDetail(userId);
-          res.status(200).json({
-            message: `${theUser.firstName} ${theUser.lastName} has been made a moderator successfully`,
-          });
+      const userId = params.userId;
+      await this.userService.makeModerator(userId).then(async user => {
+        const theUser = await this.userService.getUserDetail(userId);
+        res.status(200).json({
+          message: `${theUser.firstName} ${theUser.lastName} has been made a moderator successfully`,
         });
+      });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_IMPLEMENTED);
     }
   }
-  @Delete('/:userId/delete')
-  async deleteUser(@Param('userId') userId, @Res() res: Response) {
+
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Delete('/:userId/deleteOthers')
+  @Permissions(permissionsEnum.MANAGE_USERS)
+  async deleteUser(@Param() params, @Res() res: Response) {
     try {
+      const userId = params.userId;
       await this.userService.deleteUser(userId).then(() => {
         res.status(200).json({
           message: 'user has been deleted successfully',
         });
       });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_IMPLEMENTED);
+    }
+  }
+
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Delete('/:userId/deleteOwnAccount')
+  @Permissions(permissionsEnum.MANAGE_OWN_PROFILE)
+  async deleteOwnAccount(@Param() params, @Res() res: Response) {
+    try {
+      const userId = params.userId;
+      await this.userService.deleteOwnAccount(userId).then(() => {
+        res.status(200).json({
+          message: 'your account has been deleted successfully',
+        });
+      });
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.NOT_IMPLEMENTED);
     }
   }
 }

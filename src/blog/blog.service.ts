@@ -1,12 +1,19 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Scope, Inject } from '@nestjs/common';
 import { CreateBlogDto, BlogCommentDto } from './dto/create-blog.dto';
 import { Model } from 'mongoose';
-import { IBlog, IBlogComment } from './interfaces/blog.interface';
+import { IBlog } from './interfaces/blog.interface';
+import { InjectModel } from '@nestjs/mongoose';
+import { REQUEST } from '@nestjs/core';
+import { RequestWithUserData } from 'express.interface';
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class BlogService {
-  constructor(@Inject('BLOG_MODEL') private readonly BlogModel: Model<IBlog>) {}
-  async createBlog(blog: CreateBlogDto, userId: string) {
+  constructor(
+    @InjectModel('Blog') private readonly BlogModel: Model<IBlog>,
+    @Inject(REQUEST) private readonly request: RequestWithUserData,
+  ) {}
+  async createBlog(blog: CreateBlogDto) {
+    const userId: string = this.request.userData.userId;
     const theBlog = {
       authorUserId: userId,
       title: blog.title,
@@ -26,30 +33,48 @@ export class BlogService {
   async getBlogDetail(blogId) {
     return await this.BlogModel.findById(blogId).exec();
   }
-  async editBlog(blog, blogId) {
+  async editOwnBlog(blog, blogId: string) {
+    const editorUserId: string = this.request.userData.userId;
+    const theBlog = await this.BlogModel.findById(blogId);
+    if (theBlog.authorUserId === editorUserId) {
+      return await this.BlogModel.update({ _id: blogId }, blog).exec();
+    } else {
+      throw new Error(
+        'You are not authorized to edit a blog that is not yours',
+      );
+    }
+  }
+
+  async editOthersBlog(blog, blogId) {
     return await this.BlogModel.update({ _id: blogId }, blog).exec();
   }
 
-  async deleteBlog(blogId) {
+  async deleteOwnBlog(blogId) {
+    const editorUserId: string = this.request.userData.userId;
+    const theBlog = await this.BlogModel.findById(blogId);
+    if (theBlog.authorUserId === editorUserId) {
+      return await this.BlogModel.remove({ _id: blogId }).exec();
+    } else {
+      throw new Error(
+        'You are not authorized to delete a blog that is not yours',
+      );
+    }
+  }
+
+  async deleteOthersBlog(blogId) {
     return await this.BlogModel.remove({ _id: blogId }).exec();
   }
 
-  async approveOrDisapproveBlog(
-    value: boolean,
-    blogId: string,
-    userId: string,
-  ) {
+  async approveOrDisapproveBlog(value: boolean, blogId: string) {
+    const userId: string = this.request.userData.userId;
     return await this.BlogModel.updateOne(
       { _id: blogId },
       { approved: value, approvedBy: userId },
     ).exec();
   }
 
-  async commentOnBlog(
-    comment: { comment: string },
-    blogId: string,
-    commenterUserId: string,
-  ) {
+  async commentOnBlog(comment: { comment: string }, blogId: string) {
+    const commenterUserId: string = this.request.userData.userId;
     const theComment: BlogCommentDto = {
       comment: comment.comment,
       time: new Date(),
@@ -68,16 +93,12 @@ export class BlogService {
     }
   }
 
-  async editComment(
-    blogId: string,
-    commentId: string,
-    newComment: string,
-    editorUserId: string,
-  ) {
+  async editOwnComment(blogId: string, commentId: string, newComment: string) {
+    const editorUserId: string = this.request.userData.userId;
     const blogComment = await this.BlogModel.findById(
       blogId,
       async (err, res) => {
-        return await res.comments.filter(value => {
+        await res.comments.filter(value => {
           value.commenterUserId === editorUserId && value._id === commentId;
         });
       },
@@ -86,7 +107,6 @@ export class BlogService {
       .then(value => {
         return value.comments[0];
       });
-    console.log(`blog returned value is: ${blogComment}`);
 
     if (blogComment) {
       const newCommentObject = {
@@ -108,18 +128,45 @@ export class BlogService {
     }
   }
 
-  async editOthersComment(
-    blogId: string,
-    newComment: string,
-    commentId: string,
-  ) {
-    return await this.BlogModel.update(
-      { _id: blogId, 'comments._id': commentId },
-      { $set: { comment: newComment } },
-    );
+  // async editOthersComment(
+  //   blogId: string,
+  //   newComment: string,
+  //   commentId: string,
+  // ) {
+  //   return await this.BlogModel.update(
+  //     { _id: blogId, 'comments._id': commentId },
+  //     { $set: { comment: newComment } },
+  //   );
+  // }
+
+  async deleteOwnComment(blogId: string, commentId) {
+    const editorUserId: string = this.request.userData.userId;
+    const blogComment = await this.BlogModel.findById(
+      blogId,
+      async (err, res) => {
+        await res.comments.filter(value => {
+          value.commenterUserId === editorUserId && value._id === commentId;
+        });
+      },
+    )
+      .exec()
+      .then(value => {
+        return value.comments[0];
+      });
+
+    if (blogComment) {
+      return await this.BlogModel.updateOne(
+        { _id: blogId },
+        { $pull: { comments: { _id: commentId } } },
+      );
+    } else {
+      throw new Error(
+        'You are not authorized to delete a comment that is not yours.',
+      );
+    }
   }
 
-  async deleteComment(blogId: string, commentId) {
+  async deleteOthersComment(blogId: string, commentId) {
     return await this.BlogModel.updateOne(
       { _id: blogId },
       { $pull: { comments: { _id: commentId } } },

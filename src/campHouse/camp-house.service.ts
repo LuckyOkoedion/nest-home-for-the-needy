@@ -1,12 +1,13 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable} from '@nestjs/common';
 import { Model } from 'mongoose';
 import { ICampHouse } from './interfaces/camp-house.interface';
 import { CreateCampHouseDto } from './dto/create-camp-house.dto';
+import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class CampHouseService {
   constructor(
-    @Inject('CAMP_HOUSE_MODEL')
+    @InjectModel('CampHouse')
     private readonly CampHouseModel: Model<ICampHouse>,
   ) {}
   async createCampHouse(campHouse: CreateCampHouseDto) {

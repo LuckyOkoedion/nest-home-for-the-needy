@@ -8,18 +8,24 @@ import {
   Param,
   Res,
   UseGuards,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { DonationService } from './donation.service';
 import { CreateDonationDto } from './dto/create-donation.dto';
 import { Response } from 'express';
-import { JwtAuthGuard } from 'src/middleware/auth/jwt-auth.guard';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { PermissionsGuard } from 'src/auth/permissions.guard';
+import { Permissions } from 'src/auth/permissions.decorator';
+import { permissionsEnum } from 'src/utils/permissions.enum';
 
 @Controller('/api/admin/donation')
 export class DonationController {
   constructor(private readonly donationService: DonationService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Post()
+  @Permissions(permissionsEnum.MAKE_DONATIONS)
   async createDonation(
     @Body() donation: CreateDonationDto,
     @Res() res: Response,
@@ -31,12 +37,13 @@ export class DonationController {
         });
       });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.EXPECTATION_FAILED);
     }
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Get()
+  @Permissions(permissionsEnum.READ_DONATIONS)
   async getAllDonation(@Res() res: Response) {
     try {
       const allDonations = await this.donationService.getAllDonation();
@@ -44,12 +51,13 @@ export class DonationController {
         res.status(200).json(allDonations);
       }
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
     }
   }
   @Get('/:donationId')
-  async donationDetail(@Param('donationId') donationId, @Res() res: Response) {
+  async donationDetail(@Param() params, @Res() res: Response) {
     try {
+      const donationId = params.donationId;
       const donationDetail = await this.donationService.getDonationDetail(
         donationId,
       );
@@ -57,39 +65,43 @@ export class DonationController {
         res.status(200).json(donationDetail);
       }
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
     }
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Put('/:donationId')
+  @Permissions(permissionsEnum.UPDATE_DONATIONS)
   async updateDonation(
-    @Param('donationId') donationId,
+    @Param() params,
     @Body() edit,
     @Res() res: Response,
   ) {
     try {
+      const donationId = params.donationId
       await this.donationService.updateDonation(donationId, edit).then(() => {
         res.status(200).json({
           message: 'A donation data updated successfully',
         });
       });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_MODIFIED);
     }
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Delete('/:donationId')
-  async deleteDonation(@Param('donationId') donationId, @Res() res: Response) {
+  @Permissions(permissionsEnum.DELETE_DONATIONS)
+  async deleteDonation(@Param() params, @Res() res: Response) {
     try {
+      const donationId = params.donationId;
       await this.donationService.deleteDonation(donationId).then(() => {
         res.status(200).json({
           message: 'A donation record deleted successfully',
         });
       });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_MODIFIED);
     }
   }
 }

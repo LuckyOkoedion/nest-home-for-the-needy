@@ -1,15 +1,13 @@
-import {
-  Module
-} from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { NavFooterController } from './nav-footer.controller';
 import { NavFooterService } from './nav-footer.service';
-import { navFooterProviders } from './nav-footer.providers';
-import { DatabaseModule } from 'src/database/database.module';
 import { AuthModule } from 'src/auth/auth.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { NavFooterSchema } from './schemas/nav-footer.schema';
 
 @Module({
-  imports: [DatabaseModule, AuthModule],
+  imports: [MongooseModule.forFeature([{ name: 'NavFooter', schema: NavFooterSchema }]), AuthModule],
   controllers: [NavFooterController],
-  providers: [NavFooterService, ...navFooterProviders],
+  providers: [NavFooterService],
 })
 export class NavFooterModule {}

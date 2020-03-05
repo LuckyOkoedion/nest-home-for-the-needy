@@ -8,63 +8,76 @@ import {
   Param,
   Res,
   Put,
-  ExecutionContext,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { BlogService } from './blog.service';
-import { CreateBlogDto } from './dto/create-blog.dto';
+import {
+  CreateBlogDto,
+  CreateBlogWithoutPicDto,
+  EditBlogDto,
+} from './dto/create-blog.dto';
 import { Response } from 'express';
-import { RequestWithUserData } from 'express.interface';
-import { JwtAuthGuard } from 'src/middleware/auth/jwt-auth.guard';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { PermissionsGuard } from 'src/auth/permissions.guard';
+import { Permissions } from 'src/auth/permissions.decorator';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { imageFileFilter } from 'src/utils/file-uploading.utils';
+import { permissionsEnum } from 'src/utils/permissions.enum';
 
 @Controller('/api/admin/blog')
 export class BlogController {
-  userId: string;
-  req: RequestWithUserData;
-  constructor(
-    private readonly blogService: BlogService,
-    private readonly context: ExecutionContext,
-  ) {
-    const httpContext = this.context.switchToHttp();
-    this.req = httpContext.getRequest();
-    this.userId = this.req.userData.userId;
-  }
+  constructor(private readonly blogService: BlogService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Post()
-  async create(@Body() createBlogDto: CreateBlogDto, @Res() res: Response) {
+  @Permissions(permissionsEnum.CREATE_BLOG)
+  @UseInterceptors(
+    FileInterceptor('pic', {
+      fileFilter: imageFileFilter,
+    }),
+  )
+  async create(
+    @Body() blog: CreateBlogWithoutPicDto,
+    @Res() res: Response,
+    @UploadedFile() file?,
+  ) {
     try {
-      await this.blogService.createBlog(createBlogDto, this.userId).then(() => {
+      const blogPic = file.name;
+      let theBlog: CreateBlogDto = { ...blog, pic: blogPic };
+      await this.blogService.createBlog(theBlog).then(() => {
         res.status(201).json({
           message: 'New blog created successfully',
         });
       });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_IMPLEMENTED);
     }
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Post('/:blogId/comment')
+  @Permissions(permissionsEnum.MAKE_COMMENT)
   async comment(
     @Body()
     comment: {
       comment: string;
     },
-    @Param('blogId') blogId: string,
+    @Param() params,
     @Res() res: Response,
   ) {
-    const commenterUserId = this.userId;
     try {
-      await this.blogService
-        .commentOnBlog(comment, blogId, commenterUserId)
-        .then(() => {
-          res.status(201).json({
-            message: 'new comment created successfully',
-          });
+      const blogId: string = params.blogId;
+      await this.blogService.commentOnBlog(comment, blogId).then(() => {
+        res.status(201).json({
+          message: 'new comment created successfully',
         });
+      });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_IMPLEMENTED);
     }
   }
 
@@ -76,7 +89,7 @@ export class BlogController {
         res.status(200).json(allBlogs);
       }
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
     }
   }
 
@@ -88,7 +101,7 @@ export class BlogController {
         res.status(200).json(blogDetail);
       }
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
     }
   }
 
@@ -100,103 +113,156 @@ export class BlogController {
         res.status(200).json(allComments);
       }
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_FOUND);
     }
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Put('/:blogId/comment/:commentId/editOwn')
-  async editComment(
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Put('/:blogId/comment/:commentId/editOwnComment')
+  @Permissions(permissionsEnum.UPDATE_OWN_COMMENT)
+  async editOwnComment(
     @Body()
     comment: {
       comment: string;
     },
-    @Param('commentId') commentId: string,
-    @Param('blogId') blogId: string,
-    editorUserId = this.userId,
+    @Param() params,
     @Res() res: Response,
   ) {
     try {
+      const commentId: string = params.commentId;
+      const blogId: string = params.blogId;
       await this.blogService
-        .editComment(blogId, comment.comment, commentId, editorUserId)
+        .editOwnComment(blogId, comment.comment, commentId)
         .then(() => {
           res.status(200).json({
             message: 'Own comment edited successfully',
           });
         });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_MODIFIED);
     }
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Put('/:blogId/othersComment/:commentId/editOthers')
-  async editOthersComment(
-    @Body()
-    comment: {
-      comment: string;
-    },
-    @Param('blogId') blogId: string,
-    @Param('commentId') commentId: string,
+  // @UseGuards(JwtAuthGuard, PermissionsGuard)
+  // @Put('/:blogId/othersComment/:commentId/editOthersComment')
+  // @Permissions('update:othersComment')
+  // async editOthersComment(
+  //   @Body()
+  //   comment: {
+  //     comment: string;
+  //   },
+  //   @Param('blogId') blogId: string,
+  //   @Param('commentId') commentId: string,
+  //   @Res() res: Response,
+  // ) {
+  //   try {
+  //     await this.blogService
+  //       .editOthersComment(blogId, comment.comment, commentId)
+  //       .then(() => {
+  //         res.status(200).json({
+  //           message: "Others' comment edited successfully",
+  //         });
+  //       });
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // }
+
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Patch('/:blogId/editOwnBlog')
+  @Permissions(permissionsEnum.UPDATE_OWN_BLOG)
+  @UseInterceptors(
+    FileInterceptor('pic', {
+      fileFilter: imageFileFilter,
+    }),
+  )
+  async editOwnBlog(
+    @Body() edit,
+    @Param() params,
     @Res() res: Response,
+    @UploadedFile() file?,
   ) {
     try {
-      await this.blogService
-        .editOthersComment(blogId, comment.comment, commentId)
-        .then(() => {
-          res.status(200).json({
-            message: "Others' comment edited successfully",
-          });
-        });
-    } catch (error) {
-      console.log(error);
-    }
-  }
+      const blogId = params.blogId;
+      let theEdit: EditBlogDto;
+      const blogPic = file.name;
+      if (file) {
+        theEdit = { ...edit, pic: blogPic };
+      } else {
+        theEdit = { ...edit };
+      }
 
-  @UseGuards(JwtAuthGuard)
-  @Patch('/:blogId')
-  async editBlog(@Body() blog, @Param('blogId') blogId, @Res() res: Response) {
-    try {
-      await this.blogService.editBlog(blog, blogId).then(() => {
+      await this.blogService.editOwnBlog(theEdit, blogId).then(() => {
         res.status(200).json({
           message: 'blog edited successfully',
         });
       });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_MODIFIED);
     }
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Patch('/:blogId/editOthersBlog')
+  @Permissions(permissionsEnum.UPDATE_OTHERS_BLOG)
+  @UseInterceptors(
+    FileInterceptor('pic', {
+      fileFilter: imageFileFilter,
+    }),
+  )
+  async editOthersBlog(
+    @Body() edit,
+    @Param() params,
+    @Res() res: Response,
+    @UploadedFile() file?,
+  ) {
+    try {
+      const blogId = params.blogId;
+      let theEdit: EditBlogDto;
+      const blogPic = file.name;
+      if (file) {
+        theEdit = { ...edit, pic: blogPic };
+      } else {
+        theEdit = { ...edit };
+      }
+
+      await this.blogService.editOthersBlog(theEdit, blogId).then(() => {
+        res.status(200).json({
+          message: 'blog edited successfully',
+        });
+      });
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.NOT_MODIFIED);
+    }
+  }
+
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Patch('/:blogId/approve')
+  @Permissions(permissionsEnum.APPROVE_BLOG)
   async approveOrDisapproveBlog(
     @Body() value: boolean,
-    userId: string = this.userId,
-    @Param('blogId') blogId: string,
+    @Param() params,
     @Res() res: Response,
   ) {
     try {
-      await this.blogService
-        .approveOrDisapproveBlog(value, blogId, userId)
-        .then(() => {
-          res.status(200).json({
-            message: 'blog approved ):',
-          });
+      const blogId: string = params.blogId;
+      await this.blogService.approveOrDisapproveBlog(value, blogId).then(() => {
+        res.status(200).json({
+          message: 'blog approved ):',
         });
+      });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_MODIFIED);
     }
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Put('/:blogId/:commentId/show')
-  async showComment(
-    value = false,
-    @Param('blogId') blogId,
-    @Param('commentId') commentId,
-    @Res() res: Response,
-  ) {
+  @Permissions(permissionsEnum.SHOW_HIDE_COMMENT)
+  async showComment(value = false, @Param() params, @Res() res: Response) {
     try {
+      const blogId = params.blogId;
+      const commentId = params.commentId;
       await this.blogService
         .hideOrShowComment(value, blogId, commentId)
         .then(() => {
@@ -205,19 +271,17 @@ export class BlogController {
           });
         });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_MODIFIED);
     }
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Put('/:blogId/:commentId/hide')
-  async hideComment(
-    value = true,
-    @Param('blogId') blogId,
-    @Param('commentId') commentId,
-    @Res() res: Response,
-  ) {
+  @Permissions(permissionsEnum.SHOW_HIDE_COMMENT)
+  async hideComment(value = true, @Param() params, @Res() res: Response) {
     try {
+      const blogId = params.blogId;
+      const commentId = params.commentId;
       await this.blogService
         .hideOrShowComment(value, blogId, commentId)
         .then(() => {
@@ -226,32 +290,75 @@ export class BlogController {
           });
         });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.NOT_MODIFIED);
     }
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Delete('/:blogId')
-  async deleteBlog(@Param('blogId') blogId, @Res() res: Response) {
-    await this.blogService.deleteBlog(blogId).then(() => {
-      res.status(200).json({
-        message: 'blog deleted successfully',
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Delete('/:blogId/deleteOwnBlog')
+  @Permissions(permissionsEnum.DELETE_OWN_BLOG)
+  async deleteOwnBlog(@Param() params, @Res() res: Response) {
+    try {
+      const blogId = params.blogId;
+      await this.blogService.deleteOwnBlog(blogId).then(() => {
+        res.status(200).json({
+          message: 'blog deleted successfully',
+        });
       });
-    });
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.NOT_IMPLEMENTED);
+    }
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Put('/:blogId/comment/:commentId/delete')
-  // Delete comment is a patch request because it does not delete the blog, it only removes a comment
-  async deleteComment(
-    @Param('commentId') commentId,
-    @Param('blogId') blogId,
-    @Res() res: Response,
-  ) {
-    await this.blogService.deleteComment(blogId, commentId).then(() => {
-      res.status(200).json({
-        message: 'Comment deleted successfully',
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Delete('/:blogId/deleteOthersBlog')
+  @Permissions(permissionsEnum.UPDATE_OTHERS_BLOG)
+  async deleteOthersBlog(@Param() params, @Res() res: Response) {
+    try {
+      const blogId = params.blogId;
+      await this.blogService.deleteOthersBlog(blogId).then(() => {
+        res.status(200).json({
+          message: 'blog deleted successfully',
+        });
       });
-    });
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.NOT_IMPLEMENTED);
+    }
+  }
+
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Put('/:blogId/comment/:commentId/deleteOwnComment')
+  // Delete comment is a put request because it does not delete the blog, it only removes a comment
+  @Permissions(permissionsEnum.DELETE_OWN_COMMENT)
+  async deleteOwnComment(@Param() params, @Res() res: Response) {
+    try {
+      const commentId = params.commentId;
+      const blogId = params.blogId;
+      await this.blogService.deleteOwnComment(blogId, commentId).then(() => {
+        res.status(200).json({
+          message: 'Comment deleted successfully',
+        });
+      });
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.NOT_IMPLEMENTED);
+    }
+  }
+
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Put('/:blogId/comment/:commentId/deleteOwnComment')
+  // Delete comment is a patch request because it does not delete the blog, it only removes a comment
+  @Permissions(permissionsEnum.DELETE_OTHERS_COMMENT)
+  async deleteOthersComment(@Param() params, @Res() res: Response) {
+    try {
+      const blogId = params.blogId;
+      const commentId = params.commentId;
+      await this.blogService.deleteOthersComment(blogId, commentId).then(() => {
+        res.status(200).json({
+          message: 'Comment deleted successfully',
+        });
+      });
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.NOT_IMPLEMENTED);
+    }
   }
 }

@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
 import { BlogController } from './blog.controller';
 import { BlogService } from './blog.service';
-import { blogProviders } from './blog.providers';
-import { DatabaseModule } from 'src/database/database.module';
 import { AuthModule } from 'src/auth/auth.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { BlogSchema } from './schemas/blog.schema';
 
 @Module({
-  imports: [DatabaseModule, AuthModule],
+  imports: [MongooseModule.forFeature([{ name: 'Blog', schema: BlogSchema }]), AuthModule],
   controllers: [BlogController],
-  providers: [BlogService, ...blogProviders],
+  providers: [BlogService],
 })
 export class BlogModule {}

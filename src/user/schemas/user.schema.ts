@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
 
 export const UserSchema = new mongoose.Schema({
-  _id:  {
+  _id: {
     type: mongoose.Schema.Types.ObjectId,
     default: new mongoose.Types.ObjectId(),
   },
@@ -13,6 +13,7 @@ export const UserSchema = new mongoose.Schema({
   hasVerifiedEmail: { type: Boolean, default: false },
   phoneNo: { type: String, required: true },
   password: { type: String, required: true },
+  profilePic: { type: String },
   ipAddressess: [],
   pageVisits: [
     {

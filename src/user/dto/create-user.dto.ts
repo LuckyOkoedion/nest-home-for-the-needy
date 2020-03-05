@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsEmail } from 'class-validator';
+import { IsNotEmpty, IsString, IsEmail, IsDate } from 'class-validator';
 
 export class CreateUserDto {
   @IsString()
@@ -10,8 +10,10 @@ export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
   readonly gender: string;
-  // Change to date type for production
-  // readonly dateOfBirth: string;
+  @IsDate()
+  readonly dateOfBirth: Date;
+  @IsString()
+  readonly profilePic?: String;
   @IsEmail()
   @IsNotEmpty()
   readonly email: string;
@@ -29,6 +31,29 @@ export class CreateUserDto {
   readonly religion: string;
   @IsString()
   readonly organisation: string;
+}
+
+export class EditUserDto {
+  @IsString()
+  readonly firstName?: string;
+  @IsString()
+  readonly lastName?: string;
+  @IsString()
+  readonly gender?: string;
+  @IsDate()
+  readonly dateOfBirth?: Date;
+  @IsString()
+  readonly profilePic?: String;
+  @IsEmail()
+  readonly email?: string;
+  @IsString()
+  readonly phoneNo?: string;
+  @IsString()
+  readonly nationality?: string;
+  @IsString()
+  readonly religion?: string;
+  @IsString()
+  readonly organisation?: string;
 }
 
 export class LoginDto {

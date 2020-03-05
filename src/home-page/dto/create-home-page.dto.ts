@@ -11,3 +11,21 @@ export class CreateHomePageDto {
   @IsNotEmpty()
   readonly ourCauses: string;
 }
+
+export class HomePageWithoutPicDto {
+  @IsString()
+  @IsNotEmpty()
+  readonly bigText: string;
+  @IsString()
+  @IsNotEmpty()
+  readonly ourCauses: string;
+}
+
+export class EditHomePageDto {
+  @IsString()
+  readonly bigText?: string;
+  @IsString()
+  readonly bannerPic?: string;
+  @IsString()
+  readonly ourCauses?: string;
+}

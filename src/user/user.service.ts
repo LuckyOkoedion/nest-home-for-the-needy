@@ -1,11 +1,24 @@
-import { Injectable, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  HttpException,
+  HttpStatus,
+  Scope,
+  Inject,
+} from '@nestjs/common';
 import { Model } from 'mongoose';
 import { IUser, IUserBody } from './interfaces/user.interface';
 import * as bcrypt from 'bcrypt';
+import { InjectModel } from '@nestjs/mongoose';
+import { EditUserDto } from './dto/create-user.dto';
+import { REQUEST } from '@nestjs/core';
+import { RequestWithUserData } from 'express.interface';
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class UserService {
-  constructor(@Inject('USER_MODEL') private readonly UserModel: Model<IUser>) {}
+  constructor(
+    @InjectModel('User') private readonly UserModel: Model<IUser>,
+    @Inject(REQUEST) private readonly request: RequestWithUserData,
+  ) {}
 
   async signUp(userBody: IUserBody, password: string) {
     // Make the first user created in the users collection a superuser with highest accessLevel = 1
@@ -42,6 +55,30 @@ export class UserService {
 
   async editUser(userId, edit) {
     return await this.UserModel.update({ _id: userId }, edit).exec();
+  }
+
+  async editOwnProfile(userId: string, edit: EditUserDto) {
+    const editorUserId: string = this.request.userData.userId;
+    const theProfile = await this.UserModel.findById(userId);
+    if (theProfile._id === editorUserId) {
+      return await this.UserModel.update({ _id: userId }, edit).exec();
+    } else {
+      throw new Error(
+        'You are not authorized to edit a profile that is not yours.',
+      );
+    }
+  }
+
+  async deleteOwnAccount(userId: string) {
+    const editorUserId: string = this.request.userData.userId;
+    const theProfile = await this.UserModel.findById(userId);
+    if (theProfile._id === editorUserId) {
+      return await this.UserModel.remove({ _id: userId });
+    } else {
+      throw new Error(
+        'You are not authorized to deactivate an account that is not yours',
+      );
+    }
   }
 
   async deleteUser(userId) {
@@ -106,7 +143,10 @@ export class UserService {
                     return returnedValue;
                   },
                   hashRejectionReason => {
-                    console.log(hashRejectionReason);
+                    throw new HttpException(
+                      hashRejectionReason,
+                      HttpStatus.NOT_IMPLEMENTED,
+                    );
                   },
                 )
                 //Create the user
@@ -126,15 +166,24 @@ export class UserService {
                         organisation: userBody.organisation,
                       }).save();
                     } catch (error) {
-                      console.log(error);
+                      throw new HttpException(
+                        error.message,
+                        HttpStatus.NOT_IMPLEMENTED,
+                      );
                     }
                   },
                   creationRejectionReason => {
-                    console.log(creationRejectionReason);
+                    throw new HttpException(
+                      creationRejectionReason,
+                      HttpStatus.NOT_IMPLEMENTED,
+                    );
                   },
                 );
             } catch (error) {
-              console.log(error);
+              throw new HttpException(
+                error.message,
+                HttpStatus.NOT_IMPLEMENTED,
+              );
             }
           }
           // const error = new Error();
@@ -142,7 +191,10 @@ export class UserService {
           // throw error;
         },
         afterfindRejectionReason => {
-          console.log(afterfindRejectionReason);
+          throw new HttpException(
+            afterfindRejectionReason,
+            HttpStatus.NOT_IMPLEMENTED,
+          );
         },
       );
     //Send verification email #### TODO#

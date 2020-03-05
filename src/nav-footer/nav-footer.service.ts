@@ -1,12 +1,13 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateNavFooterDto } from './dto/create-nav-footer.dto';
 import { Model } from 'mongoose';
 import { INavFooter } from './interfaces/nav-footer.interface';
+import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class NavFooterService {
   constructor(
-    @Inject('NAV_FOOTER_MODEL')
+    @InjectModel('NavFooter')
     private readonly NavFooterModel: Model<INavFooter>,
   ) {}
   async createNavFooterData(navFooter: CreateNavFooterDto) {
@@ -17,7 +18,7 @@ export class NavFooterService {
       return createdNavFooter.save();
     }
     if (numberOfDocuments >= 1) {
-      console.log(
+      throw new Error(
         'An instance of this document already exists. You cannot have more than one.',
       );
     }
