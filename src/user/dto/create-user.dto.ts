@@ -57,7 +57,7 @@ export class EditUserDto {
 }
 
 export class LoginDto {
-  @IsEmail()
+  @IsString()
   @IsNotEmpty()
   email: string;
   @IsString()
