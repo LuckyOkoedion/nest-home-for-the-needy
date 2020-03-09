@@ -1,20 +1,34 @@
-import * as mongoose from 'mongoose';
+import { prop, mongoose, arrayProp, Ref } from '@typegoose/typegoose';
+import { IsString, IsDate, IsBoolean, IsArray } from 'class-validator';
+import { User } from 'src/user/schemas/user.schema';
 
-export const GallerySchema = new mongoose.Schema({
-  _id: {
-    type: mongoose.Schema.Types.ObjectId,
-    default: new mongoose.Types.ObjectId(),
-  },
-  picture: { type: String, required: true },
-  pictureName: { type: String, required: true },
-  dateCaptured: { type: String, required: true },
-  peopleInPicture: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
-  ],
-  occassionCaptured: { type: String, required: true },
-  approved: { type: Boolean, default: false },
-});
+export class ThePeopleInPicture {
+  @prop({
+    ref: 'User',
+    required: true,
+  })
+  authorUserId!: Ref<User>;
+}
+
+export class Gallery {
+  @prop({ default: new mongoose.Types.ObjectId() })
+  _id: mongoose.Schema.Types.ObjectId;
+  @IsString()
+  @prop({ required: true })
+  picture: string;
+  @IsString()
+  @prop({ required: true })
+  pictureName: string;
+  @IsDate()
+  @prop({ required: true })
+  dateCaptured: Date;
+  @IsString()
+  @prop({ required: true })
+  occassionCaptured: string;
+  @IsBoolean()
+  @prop({ default: false })
+  approved: string;
+  @IsArray()
+  @arrayProp({ items: ThePeopleInPicture })
+  peopleInPicture: ThePeopleInPicture[];
+}

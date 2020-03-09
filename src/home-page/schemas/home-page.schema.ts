@@ -1,7 +1,23 @@
-import * as mongoose from 'mongoose';
+import { IsString } from 'class-validator';
+import { prop, mongoose } from '@typegoose/typegoose';
 
-export const HomePageSchema = new mongoose.Schema({
-  bigText: { type: String, required: true },
-  bannerPic: { type: String, required: true },
-  ourCauses: String,
-});
+export class HomePage {
+  @prop({ default: new mongoose.Types.ObjectId() })
+  _id: mongoose.Schema.Types.ObjectId;
+
+  @IsString()
+  @prop({
+    required: true,
+  })
+  bigText!: string;
+  @IsString()
+  @prop({
+    required: true,
+  })
+  bannerPic!: string;
+  @IsString()
+  @prop({
+    required: true,
+  })
+  ourCauses!: string;
+}

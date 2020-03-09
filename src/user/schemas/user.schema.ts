@@ -1,39 +1,68 @@
-import * as mongoose from 'mongoose';
+import { prop, mongoose } from '@typegoose/typegoose';
+import {
+  IsString,
+  IsDate,
+  IsBoolean,
+  IsPhoneNumber,
+  IsNumber,
+} from 'class-validator';
 
-export const UserSchema = new mongoose.Schema({
-  _id: {
-    type: mongoose.Schema.Types.ObjectId,
-    default: new mongoose.Types.ObjectId(),
-  },
-  firstName: { type: String, required: true },
-  lastName: { type: String, required: true },
-  gender: { type: String },
-  dateOfBirth: { type: Date },
-  email: { type: String, required: true },
-  hasVerifiedEmail: { type: Boolean, default: false },
-  phoneNo: { type: String, required: true },
-  password: { type: String, required: true },
-  profilePic: { type: String },
-  ipAddressess: [],
-  pageVisits: [
-    {
-      homePage: { type: Number },
-      aboutPage: { type: Number },
-      contactPage: { type: Number },
-      donatePage: { type: Number },
-      eventsPage: { type: Number },
-      blogPage: { type: Number },
-      projectsPage: { type: Number },
-    },
-  ],
-  interest: { type: String },
-  nationality: { type: String },
-  religion: { type: String },
-  organisation: { type: String },
-  projectManaging: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Project',
-  },
-  type: { type: String },
-  accessLevel: { type: Number, default: 5 },
-});
+export class User {
+  @prop({ default: new mongoose.Types.ObjectId() })
+  _id: mongoose.Schema.Types.ObjectId;
+  @IsString()
+  @prop({
+    required: true,
+  })
+  firstName!: string;
+  @IsString()
+  @prop({
+    required: true,
+  })
+  lastName!: string;
+  @IsString()
+  @prop()
+  gender: string;
+  @IsDate()
+  @prop()
+  dateOfBirth: Date;
+  @IsString()
+  @prop({
+    required: true,
+  })
+  email!: string;
+  @IsBoolean()
+  @prop({
+    default: false,
+  })
+  hasVerifiedEmail: boolean;
+  @IsPhoneNumber('ZZ')
+  @prop({
+    required: true,
+  })
+  phoneNo: string;
+  @IsString()
+  @prop({
+    required: true,
+  })
+  password: string;
+  @IsString()
+  @prop()
+  profilePic: string;
+  @IsString()
+  @prop()
+  nationality: string;
+  @IsString()
+  @prop()
+  religion: string;
+  @IsString()
+  @prop()
+  organisation: string;
+  @IsString()
+  @prop()
+  type: string;
+  @IsNumber()
+  @prop({ default: 5 })
+  accessLevel: number;
+}
+

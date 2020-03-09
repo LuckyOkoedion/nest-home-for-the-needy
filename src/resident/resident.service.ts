@@ -9,11 +9,14 @@ import { Model } from 'mongoose';
 import { IResident } from './interfaces/resident.interface';
 import { InjectModel } from '@nestjs/mongoose';
 import { async } from 'rxjs/internal/scheduler/async';
+import { ReturnModelType } from '@typegoose/typegoose';
+import { Resident } from './schemas/resident.schema';
 
 @Injectable()
 export class ResidentService {
   constructor(
-    @InjectModel('Resident') private readonly ResidentModel: Model<IResident>,
+    @InjectModel('Resident')
+    private readonly ResidentModel: ReturnModelType<typeof Resident>,
   ) {}
   async createResident(
     resident: ResidentWithoutArraysDto,

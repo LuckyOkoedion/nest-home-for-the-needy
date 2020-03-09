@@ -1,22 +1,54 @@
-import * as mongoose from 'mongoose';
+import { prop, mongoose, Ref } from '@typegoose/typegoose';
+import { User } from 'src/user/schemas/user.schema';
+import { IsString, IsDate, IsNumber } from 'class-validator';
 
-export const ProjectSchema = new mongoose.Schema({
-    _id: {
-      type: mongoose.Schema.Types.ObjectId,
-      default: new mongoose.Types.ObjectId(),
-    },
-    projectName: { type: String, required: true },
-    projectManager: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true
-    },
-    projectScope: { type: String, required: true },
-    projectBudgetedStartDate: { type: Date, required: true },
-    projectBudgetedEndDate: { type: Date, required: true },
-    projectActualStartDate: { type: Date, required: true },
-    projectActualEndDate: { type: Date, required: true },
-    projectBudgetedDays: { type: Number, required: true },
-    projectBudgetedCost: { type: Number, required: true },
-    projectActualCost: { type: Number, required: true }
-  });
+export class Project {
+  @prop({ default: new mongoose.Types.ObjectId() })
+  _id: mongoose.Schema.Types.ObjectId;
+  @IsString()
+  @prop({
+    required: true,
+  })
+  projectName!: string;
+  @prop({
+    ref: 'User',
+    required: true,
+  })
+  projectManagerId!: Ref<User>;
+  @IsString()
+  @prop({
+    required: true,
+  })
+  projectScope!: string;
+  @IsDate()
+  @prop({
+    required: true,
+  })
+  projectBudgetedStartDate!: Date;
+  @IsDate()
+  @prop({
+    required: true,
+  })
+  projectBudgetedEndDate!: Date;
+  @IsDate()
+  @prop()
+  projectActualStartDate: Date;
+  @IsDate()
+  @prop()
+  projectActualEndDate: Date;
+  @IsNumber()
+  @prop({
+    required: true,
+  })
+  projectBudgetedDays!: Number;
+  @IsNumber()
+  @prop({
+    required: true,
+  })
+  projectBudgetedCost!: Number;
+  @IsNumber()
+  @prop({
+    required: true,
+  })
+  projectActualCost: Number;
+}

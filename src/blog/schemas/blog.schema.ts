@@ -1,40 +1,81 @@
-import * as mongoose from 'mongoose';
+import { prop, Ref, arrayProp, mongoose } from '@typegoose/typegoose';
+import { IsString, IsDate, IsBoolean } from 'class-validator';
+import { User } from 'src/user/schemas/user.schema';
 
-export const BlogSchema = new mongoose.Schema({
-  _id: {
-    type: mongoose.Schema.Types.ObjectId,
-    default: new mongoose.Types.ObjectId(),
-  },
-  authorUserId: {
-    type: mongoose.Schema.Types.ObjectId,
+export class Comment {
+  @IsString()
+  @prop({ default: new mongoose.Types.ObjectId() })
+  _id: string;
+  @prop({
     ref: 'User',
     required: true,
-  },
-  title: { type: String, required: true },
-  category: { type: String, required: true },
-  pic: { type: String, required: true },
-  body: { type: String, required: true },
-  timestamp: { type: Date, required: true },
-  comments: [
-    {
-      _id: {
-        type: String,
-        default: new mongoose.Types.ObjectId(),
-      },
-      commenterUserId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true,
-      },
-      comment: { type: String, required: true },
-      time: { type: Date, required: true },
-      hide: { type: Boolean, default: false },
-      edited: { type: Boolean, default: false },
-    },
-  ],
-  approved: { type: Boolean, default: false },
-  approvedBy: {
-    type: mongoose.Schema.Types.ObjectId,
+  })
+  commenterUserId!: Ref<User>;
+  @IsString()
+  @prop({
+    required: true,
+  })
+  comment!: string;
+  @IsDate()
+  @prop({
+    required: true,
+  })
+  time!: Date;
+  @IsBoolean()
+  @prop({
+    default: false,
+  })
+  hide!: Boolean;
+  @IsBoolean()
+  @prop({
+    default: false,
+  })
+  edited!: Boolean;
+}
+
+export class Blog {
+  @prop({ default: new mongoose.Types.ObjectId() })
+  _id: mongoose.Schema.Types.ObjectId;
+  @prop({
     ref: 'User',
-  },
-});
+    required: true,
+  })
+  authorUserId!: Ref<User>;
+  @IsString()
+  @prop({
+    required: true,
+  })
+  title!: string;
+  @IsString()
+  @prop({
+    required: true,
+  })
+  category!: string;
+  @IsString()
+  @prop({
+    required: true,
+  })
+  pic!: string;
+  @IsString()
+  @prop({
+    required: true,
+  })
+  body!: string;
+  @IsDate()
+  @prop({
+    required: true,
+  })
+  timestamp!: Date;
+  @arrayProp({ items: Comment })
+  comments: Comment[];
+  @IsBoolean()
+  @prop({
+    default: false,
+  })
+  approved!: Boolean;
+  @prop({
+    ref: 'User',
+    required: true,
+  })
+  approvedBy!: Ref<User>;
+}

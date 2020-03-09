@@ -8,7 +8,6 @@ import {
   Param,
   Res,
   UseGuards,
-  Request,
   UseInterceptors,
   UploadedFile,
   HttpException,

@@ -1,9 +1,11 @@
-import * as mongoose from 'mongoose';
+import { prop, mongoose } from '@typegoose/typegoose';
+import { IsString } from 'class-validator';
 
-export const BlogPageSchema = new mongoose.Schema({
-  _id:  {
-    type: mongoose.Schema.Types.ObjectId,
-    default: new mongoose.Types.ObjectId(),
-  },
-  bigText: { type: String, required: true },
-});
+export class BlogPage {
+  @prop({ default: new mongoose.Types.ObjectId() })
+  _id: mongoose.Schema.Types.ObjectId;
+  @IsString()
+  @prop({ required: true })
+  bigText: string;
+}
+

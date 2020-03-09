@@ -3,12 +3,14 @@ import { CreateNavFooterDto } from './dto/create-nav-footer.dto';
 import { Model } from 'mongoose';
 import { INavFooter } from './interfaces/nav-footer.interface';
 import { InjectModel } from '@nestjs/mongoose';
+import { ReturnModelType } from '@typegoose/typegoose';
+import { NavFooter } from './schemas/nav-footer.schema';
 
 @Injectable()
 export class NavFooterService {
   constructor(
     @InjectModel('NavFooter')
-    private readonly NavFooterModel: Model<INavFooter>,
+    private readonly NavFooterModel: ReturnModelType<typeof NavFooter>,
   ) {}
   async createNavFooterData(navFooter: CreateNavFooterDto) {
     //Ensure that there is only one instance of the document in the database.

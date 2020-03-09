@@ -12,15 +12,14 @@ import { NavFooterModule } from './nav-footer/nav-footer.module';
 import { ProjectModule } from './project/project.module';
 import { ResidentModule } from './resident/resident.module';
 import { UserModule } from './user/user.module';
-import { VisitModule } from './visit/visit.module';
 import { CampHouseModule } from './campHouse/camp-house.module';
 import { AuthModule } from './auth/auth.module';
-import { MongooseModule } from '@nestjs/mongoose';
+import { TypegooseModule } from "nestjs-typegoose";
 import { MulterModule } from '@nestjs/platform-express';
 
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb://localhost/home-for-the-needy', {
+    TypegooseModule.forRoot('mongodb://localhost/home-for-the-needy', {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     }),
@@ -39,7 +38,6 @@ import { MulterModule } from '@nestjs/platform-express';
     ProjectModule,
     ResidentModule,
     UserModule,
-    VisitModule,
     CampHouseModule,
   ],
   controllers: [AppController],

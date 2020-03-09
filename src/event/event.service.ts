@@ -1,13 +1,16 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { Model } from 'mongoose';
 import { IEvent } from './interfaces/event.interface';
 import { InjectModel } from '@nestjs/mongoose';
+import { ReturnModelType } from '@typegoose/typegoose';
+import { Event } from './schemas/event.schema';
 
 @Injectable()
 export class EventService {
   constructor(
-    @InjectModel('Event') private readonly EventModel: Model<IEvent>,
+    @InjectModel('Event')
+    private readonly EventModel: ReturnModelType<typeof Event>,
   ) {}
   async createEvent(event: CreateEventDto) {
     const createdEvent = await new this.EventModel(event);

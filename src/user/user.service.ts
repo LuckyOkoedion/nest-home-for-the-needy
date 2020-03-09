@@ -5,18 +5,19 @@ import {
   Scope,
   Inject,
 } from '@nestjs/common';
-import { Model } from 'mongoose';
 import { IUser, IUserBody } from './interfaces/user.interface';
 import * as bcrypt from 'bcrypt';
 import { InjectModel } from '@nestjs/mongoose';
 import { EditUserDto } from './dto/create-user.dto';
 import { REQUEST } from '@nestjs/core';
 import { RequestWithUserData } from 'express.interface';
+import { ReturnModelType } from '@typegoose/typegoose';
+import { User } from './schemas/user.schema';
 
 @Injectable({ scope: Scope.REQUEST })
 export class UserService {
   constructor(
-    @InjectModel('User') private readonly UserModel: Model<IUser>,
+    @InjectModel('User') private readonly UserModel: ReturnModelType<typeof User>,
     @Inject(REQUEST) private readonly request: RequestWithUserData,
   ) {}
 
