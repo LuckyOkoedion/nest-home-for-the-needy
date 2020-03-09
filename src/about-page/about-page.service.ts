@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { Model } from 'mongoose';
 import {
   CreateAboutPageDto,
   EditAboutPageDto,
 } from './dto/create-about-page.dto';
-import { IAboutPage } from './interfaces/about-page.interface';
 import { InjectModel } from '@nestjs/mongoose';
+import { ReturnModelType } from "@typegoose/typegoose";
+import { AboutPage } from './schemas/about-page.schema';
 
 @Injectable()
 export class AboutPageService {
   constructor(
     @InjectModel('AboutPage')
-    private readonly AboutPageModel: Model<IAboutPage>,
+    private readonly AboutPageModel: ReturnModelType<typeof AboutPage>,
   ) {}
   async createAboutPageData(aboutPage: CreateAboutPageDto) {
     //Ensure that there is only one instance of the document in the database.

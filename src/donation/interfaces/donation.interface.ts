@@ -6,6 +6,6 @@ export interface IDonation extends Document {
   readonly amount: number;
   readonly currency: string;
   readonly exchangeRate: number;
-  readonly nairaAmount: number;
+  readonly homeCurrencyAmount: number;
   readonly projectId: string;
 }

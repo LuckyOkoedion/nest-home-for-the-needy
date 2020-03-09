@@ -1,22 +1,36 @@
-import * as mongoose from 'mongoose';
+import { prop, mongoose, Ref } from '@typegoose/typegoose';
+import { IsString, IsNumber } from 'class-validator';
+import { User } from 'src/user/schemas/user.schema';
+import { Project } from 'src/project/schemas/project.schema';
 
-export const DonationSchema = new mongoose.Schema({
-  _id: {
-    type: mongoose.Schema.Types.ObjectId,
-    default: new mongoose.Types.ObjectId(),
-  },
-  donor: {
-    type: mongoose.Schema.Types.ObjectId,
+export class Donation {
+  @prop({ default: new mongoose.Types.ObjectId() })
+  _id: mongoose.Schema.Types.ObjectId;
+  @IsString()
+  @prop({
     ref: 'User',
     required: true,
-  },
-  ipLocation: { type: String, required: true },
-  amount: { type: Number, required: true },
-  currency: { type: String, required: true },
-  exchangeRate: { type: Number, required: true },
-  nairaAmount: { type: Number, required: true },
-  project: {
-    type: mongoose.Schema.Types.ObjectId,
+  })
+  donor: Ref<User>;
+  @IsString()
+  @prop()
+  ipLocation: string;
+  @IsNumber()
+  @prop({ required: true })
+  amount: number;
+  @IsString()
+  @prop({ required: true })
+  currency: string;
+  @IsNumber()
+  @prop({ required: true })
+  exchangeRate: number;
+  @IsNumber()
+  @prop({ required: true })
+  homeCurrencyAmount: number;
+  @IsString()
+  @prop({
     ref: 'Project',
-  },
-});
+    required: true,
+  })
+  project: Ref<Project>;
+}

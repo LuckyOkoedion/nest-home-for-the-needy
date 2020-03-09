@@ -1,18 +1,16 @@
-import * as mongoose from 'mongoose';
+import { prop, mongoose, arrayProp, Ref } from '@typegoose/typegoose';
+import { Resident } from 'src/resident/schemas/resident.schema';
 
-export const CampHouseSchema = new mongoose.Schema({
-  _id: {
-    type: mongoose.Schema.Types.ObjectId,
-    default: new mongoose.Types.ObjectId(),
-  },
-  residents: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Resident',
-    },
-  ],
-  leader: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Resident',
-  },
-});
+export class ResidentItem {
+  @prop({ ref: 'Resident' })
+  residentId: Ref<Resident>;
+}
+
+export class CampHouse {
+  @prop({ default: new mongoose.Types.ObjectId() })
+  _id: mongoose.Schema.Types.ObjectId;
+  @arrayProp({ items: ResidentItem })
+  residents: ResidentItem[];
+  @prop({ ref: 'Resident' })
+  leader: Ref<Resident>;
+}

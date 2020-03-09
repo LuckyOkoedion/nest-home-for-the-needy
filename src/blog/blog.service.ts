@@ -1,15 +1,15 @@
 import { Injectable, Scope, Inject } from '@nestjs/common';
 import { CreateBlogDto, BlogCommentDto } from './dto/create-blog.dto';
-import { Model } from 'mongoose';
-import { IBlog } from './interfaces/blog.interface';
 import { InjectModel } from '@nestjs/mongoose';
 import { REQUEST } from '@nestjs/core';
 import { RequestWithUserData } from 'express.interface';
+import { ReturnModelType } from "@typegoose/typegoose";
+import { Blog } from './schemas/blog.schema';
 
 @Injectable({ scope: Scope.REQUEST })
 export class BlogService {
   constructor(
-    @InjectModel('Blog') private readonly BlogModel: Model<IBlog>,
+    @InjectModel('Blog') private readonly BlogModel: ReturnModelType<typeof Blog>,
     @Inject(REQUEST) private readonly request: RequestWithUserData,
   ) {}
   async createBlog(blog: CreateBlogDto) {
@@ -36,7 +36,7 @@ export class BlogService {
   async editOwnBlog(blog, blogId: string) {
     const editorUserId: string = this.request.userData.userId;
     const theBlog = await this.BlogModel.findById(blogId);
-    if (theBlog.authorUserId === editorUserId) {
+    if (theBlog.authorUserId.toString() === editorUserId) {
       return await this.BlogModel.update({ _id: blogId }, blog).exec();
     } else {
       throw new Error(
@@ -52,7 +52,7 @@ export class BlogService {
   async deleteOwnBlog(blogId) {
     const editorUserId: string = this.request.userData.userId;
     const theBlog = await this.BlogModel.findById(blogId);
-    if (theBlog.authorUserId === editorUserId) {
+    if (theBlog.authorUserId.toString() === editorUserId) {
       return await this.BlogModel.remove({ _id: blogId }).exec();
     } else {
       throw new Error(
@@ -99,7 +99,7 @@ export class BlogService {
       blogId,
       async (err, res) => {
         await res.comments.filter(value => {
-          value.commenterUserId === editorUserId && value._id === commentId;
+          value.commenterUserId.toString() === editorUserId && value._id === commentId;
         });
       },
     )
@@ -145,7 +145,7 @@ export class BlogService {
       blogId,
       async (err, res) => {
         await res.comments.filter(value => {
-          value.commenterUserId === editorUserId && value._id === commentId;
+          value.commenterUserId.toString() === editorUserId && value._id === commentId;
         });
       },
     )

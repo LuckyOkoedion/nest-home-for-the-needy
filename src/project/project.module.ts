@@ -2,12 +2,12 @@ import { Module } from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { ProjectController } from './project.controller';
 import { AuthModule } from 'src/auth/auth.module';
-import { MongooseModule } from '@nestjs/mongoose';
-import { ProjectSchema } from './schemas/project.schema';
+import { TypegooseModule } from 'nestjs-typegoose';
+import { Project } from './schemas/project.schema';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: 'Project', schema: ProjectSchema }]),
+    TypegooseModule.forFeature([Project]),
     AuthModule,
   ],
   providers: [ProjectService],

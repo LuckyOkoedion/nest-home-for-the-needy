@@ -6,7 +6,7 @@ export class CreateNavFooterDto {
   readonly brandName: string;
   @IsArray()
   @IsNotEmpty()
-  readonly nav: [CreateNavDto];
+  readonly nav: CreateNavDto[];
   @IsString()
   @IsNotEmpty()
   readonly aboutUsTitle: string;

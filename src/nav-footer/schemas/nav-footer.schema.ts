@@ -1,20 +1,73 @@
-import * as mongoose from 'mongoose';
+import { prop, mongoose, arrayProp } from '@typegoose/typegoose';
+import { IsString, IsArray, IsPhoneNumber, IsEmail } from 'class-validator';
 
-export const NavFooterSchema = new mongoose.Schema({
-    brandName: { type: String, required: true },
-    nav: [
-      {
-        name: { type: String, required: true },
-        link: { type: String, required: true }
-      }
-    ],
-    aboutUsTitle: { type: String, required: true },
-    aboutUsText: { type: String, required: true },
-    twitterLink: { type: String, required: true },
-    facebookLink: { type: String, required: true },
-    instagramLink: { type: String, required: true },
-    recentBlogTitle: { type: String, required: true },
-    officeAddress: { type: String, required: true },
-    phoneNo: { type: String, required: true },
-    email: { type: String, required: true }
-  });
+export class TheNav {
+  @IsString()
+  @prop({
+    required: true,
+  })
+  name!: string;
+  @IsString()
+  @prop({
+    required: true,
+  })
+  link!: string;
+}
+
+export class NavFooter {
+  @prop({ default: new mongoose.Types.ObjectId() })
+  _id: mongoose.Schema.Types.ObjectId;
+  @IsString()
+  @prop({
+    required: true,
+  })
+  brandName!: string;
+  @IsArray()
+  @arrayProp({ items: TheNav })
+  nav: TheNav[];
+  @IsString()
+  @prop({
+    required: true,
+  })
+  aboutUsTitle!: string;
+  @IsString()
+  @prop({
+    required: true,
+  })
+  aboutUsText!: string;
+  @IsString()
+  @prop({
+    required: true,
+  })
+  twitterLink!: string;
+  @IsString()
+  @prop({
+    required: true,
+  })
+  facebookLink!: string;
+  @IsString()
+  @prop({
+    required: true,
+  })
+  instagramLink!: string;
+  @IsString()
+  @prop({
+    required: true,
+  })
+  recentBlogTitle!: string;
+  @IsString()
+  @prop({
+    required: true,
+  })
+  officeAddress!: string;
+  @IsPhoneNumber('ZZ')
+  @prop({
+    required: true,
+  })
+  phoneNO!: string;
+  @IsEmail()
+  @prop({
+    required: true,
+  })
+  email!: string;
+}

@@ -1,27 +1,62 @@
-import * as mongoose from 'mongoose';
+import { prop } from '@typegoose/typegoose';
+import { IsString, IsNumber } from 'class-validator';
 
-export const AboutPageSchema = new mongoose.Schema({
-  _id: {
-    type: mongoose.Schema.Types.ObjectId,
-    default: new mongoose.Types.ObjectId(),
-  },
-  bigText: { type: String },
-  biodesc: { type: String },
-  servedTitle: { type: String },
-  servedNo: { type: Number },
-  servedSubTitle: { type: String },
-  donateTitle: { type: String },
-  donateSub: { type: String },
-  donateBtn: { type: String },
-  volunteerTitle: { type: String },
-  volunteerSub: { type: String },
-  volunteerBtn: { type: String },
-  latestDonationTitle: { type: String },
-  latestDonationQuote: { type: String },
-  bannerPic: { type: String },
-  bioPic: { type: String },
-  donorName: { type: String },
-  justNow: { type: String },
-  donateFor: { type: String },
-  donatePurpose: { type: String },
-});
+export class AboutPage {
+  @IsString()
+  @prop()
+  bigText: string;
+  @IsString()
+  @prop()
+  biodesc: string;
+  @IsString()
+  @prop()
+  servedTitle: string;
+  @IsNumber()
+  @prop()
+  servedNo: number;
+  @IsString()
+  @prop()
+  servedSubTitle: string;
+  @IsString()
+  @prop()
+  donateTitle: string;
+  @IsString()
+  @prop()
+  donateSub: string;
+  @IsString()
+  @prop()
+  donateBtn: string;
+  @IsString()
+  @prop()
+  volunteerTitle: string;
+  @IsString()
+  @prop()
+  volunteerSub: string;
+  @IsString()
+  @prop()
+  volunteerBtn: string;
+  @IsString()
+  @prop()
+  latestDonationTitle: string;
+  @IsString()
+  @prop()
+  latestDonationQuote: string;
+  @IsString()
+  @prop()
+  bannerPic: string;
+  @IsString()
+  @prop()
+  bioPic: string;
+  @IsString()
+  @prop()
+  donorName: string;
+  @IsString()
+  @prop()
+  justNow: string;
+  @IsString()
+  @prop()
+  donateFor: string;
+  @IsString()
+  @prop()
+  donatePurpose: string;
+}
