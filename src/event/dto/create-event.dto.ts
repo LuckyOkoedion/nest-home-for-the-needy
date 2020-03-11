@@ -5,6 +5,7 @@ import {
   IsObject,
   IsBoolean,
   IsArray,
+  IsOptional,
 } from 'class-validator';
 
 export class CreateEventManagerDto {
@@ -56,9 +57,11 @@ export class CreateEventDto {
   @IsString()
   @IsNotEmpty()
   readonly venue: string;
+  @IsOptional()
   @IsObject()
   @IsNotEmpty()
   readonly eventManager?: CreateEventManagerDto;
+  @IsOptional()
   @IsArray()
-  readonly invitees?: [CreateInviteesDto];
+  readonly invitees?: CreateInviteesDto[];
 }

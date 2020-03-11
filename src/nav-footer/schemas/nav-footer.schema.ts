@@ -60,7 +60,7 @@ export class NavFooter {
     required: true,
   })
   officeAddress!: string;
-  @IsPhoneNumber('ZZ')
+  @IsString()
   @prop({
     required: true,
   })

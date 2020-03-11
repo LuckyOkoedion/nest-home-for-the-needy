@@ -17,7 +17,7 @@ export class AppController {
   constructor(
     private readonly appService: AppService,
     private readonly authService: AuthService,
-  ) {}
+  ) { }
 
   @Get()
   getHello(): string {

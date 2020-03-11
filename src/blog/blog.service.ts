@@ -1,6 +1,6 @@
 import { Injectable, Scope, Inject } from '@nestjs/common';
 import { CreateBlogDto, BlogCommentDto } from './dto/create-blog.dto';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectModel } from "nestjs-typegoose";
 import { REQUEST } from '@nestjs/core';
 import { RequestWithUserData } from 'express.interface';
 import { ReturnModelType } from "@typegoose/typegoose";
@@ -9,7 +9,7 @@ import { Blog } from './schemas/blog.schema';
 @Injectable({ scope: Scope.REQUEST })
 export class BlogService {
   constructor(
-    @InjectModel('Blog') private readonly BlogModel: ReturnModelType<typeof Blog>,
+    @InjectModel(Blog) private readonly BlogModel: ReturnModelType<typeof Blog>,
     @Inject(REQUEST) private readonly request: RequestWithUserData,
   ) {}
   async createBlog(blog: CreateBlogDto) {

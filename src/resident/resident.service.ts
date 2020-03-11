@@ -1,28 +1,27 @@
 import { Injectable } from '@nestjs/common';
 import {
   ResidentWithoutArraysDto,
-  createResidentGalleryDto,
-  RelatedCoResidentDto,
-  PersonalSponsorDto,
+  CreateResidentGalleryDto,
+  CreateRelatedCoResidentDto,
+  CreatePersonalSponsorDto,
+  EditRelatedCoResidentDto,
+  EditPersonalSponsorDto,
 } from './dto/create-resident.dto';
-import { Model } from 'mongoose';
-import { IResident } from './interfaces/resident.interface';
-import { InjectModel } from '@nestjs/mongoose';
-import { async } from 'rxjs/internal/scheduler/async';
+import { InjectModel } from "nestjs-typegoose";
 import { ReturnModelType } from '@typegoose/typegoose';
 import { Resident } from './schemas/resident.schema';
 
 @Injectable()
 export class ResidentService {
   constructor(
-    @InjectModel('Resident')
+    @InjectModel(Resident)
     private readonly ResidentModel: ReturnModelType<typeof Resident>,
   ) {}
   async createResident(
     resident: ResidentWithoutArraysDto,
-    picture?: createResidentGalleryDto,
-    coResident?: RelatedCoResidentDto,
-    personalSponsor?: PersonalSponsorDto,
+    picture?: CreateResidentGalleryDto,
+    coResident?: CreateRelatedCoResidentDto,
+    personalSponsor?: CreatePersonalSponsorDto,
   ) {
     //
     //
@@ -38,12 +37,12 @@ export class ResidentService {
     if (resident && picture && !coResident && !personalSponsor) {
       const createdResident = await new this.ResidentModel(resident).save();
       await this.ResidentModel.updateOne(
-        { _id: createdResident._id },
+        { _id: createdResident.id },
         { $addToSet: { gallery: picture } },
       );
       //Returning updated resident
       const updatedResident = await this.ResidentModel.findById(
-        createdResident._id,
+        createdResident.id,
       ).exec();
       return updatedResident;
     }
@@ -54,12 +53,12 @@ export class ResidentService {
     if (resident && !picture && coResident && !personalSponsor) {
       const createdResident = await new this.ResidentModel(resident).save();
       await this.ResidentModel.updateOne(
-        { _id: createdResident._id },
+        { _id: createdResident.id },
         { $addToSet: { relatedCoResident: coResident } },
       );
       //Returning updated resident
       const updatedResident = await this.ResidentModel.findById(
-        createdResident._id,
+        createdResident.id,
       ).exec();
       return updatedResident;
     }
@@ -70,12 +69,12 @@ export class ResidentService {
     if (resident && !picture && !coResident && personalSponsor) {
       const createdResident = await new this.ResidentModel(resident).save();
       await this.ResidentModel.updateOne(
-        { _id: createdResident._id },
+        { _id: createdResident.id },
         { $addToSet: { gallery: picture } },
       );
       //Returning updated resident
       const updatedResident = await this.ResidentModel.findById(
-        createdResident._id,
+        createdResident.id,
       ).exec();
       return updatedResident;
     }
@@ -87,17 +86,17 @@ export class ResidentService {
       const createdResident = await new this.ResidentModel(resident).save();
       //Picture
       await this.ResidentModel.updateOne(
-        { _id: createdResident._id },
+        { _id: createdResident.id },
         { $addToSet: { gallery: picture } },
       );
       //relatedCoResident
       await this.ResidentModel.updateOne(
-        { _id: createdResident._id },
+        { _id: createdResident.id },
         { $addToSet: { relatedCoResident: coResident } },
       );
       //Returning updated resident
       const updatedResident = await this.ResidentModel.findById(
-        createdResident._id,
+        createdResident.id,
       ).exec();
       return updatedResident;
     }
@@ -109,17 +108,17 @@ export class ResidentService {
       const createdResident = await new this.ResidentModel(resident).save();
       //Picture
       await this.ResidentModel.updateOne(
-        { _id: createdResident._id },
+        { _id: createdResident.id },
         { $addToSet: { gallery: picture } },
       );
       //personalSponsor
       await this.ResidentModel.updateOne(
-        { _id: createdResident._id },
+        { _id: createdResident.id },
         { $addToSet: { personalSponsor: personalSponsor } },
       );
       //Returning updated resident
       const updatedResident = await this.ResidentModel.findById(
-        createdResident._id,
+        createdResident.id,
       ).exec();
       return updatedResident;
     }
@@ -131,17 +130,17 @@ export class ResidentService {
       const createdResident = await new this.ResidentModel(resident).save();
       //relatedCoResident
       await this.ResidentModel.updateOne(
-        { _id: createdResident._id },
+        { _id: createdResident.id },
         { $addToSet: { relatedCoResident: coResident } },
       );
       //personalSponsor
       await this.ResidentModel.updateOne(
-        { _id: createdResident._id },
+        { _id: createdResident.id },
         { $addToSet: { personalSponsor: personalSponsor } },
       );
       //Returning updated resident
       const updatedResident = await this.ResidentModel.findById(
-        createdResident._id,
+        createdResident.id,
       ).exec();
       return updatedResident;
     }
@@ -153,17 +152,17 @@ export class ResidentService {
       const createdResident = await new this.ResidentModel(resident).save();
       //relatedCoResident
       await this.ResidentModel.updateOne(
-        { _id: createdResident._id },
+        { _id: createdResident.id },
         { $addToSet: { relatedCoResident: coResident } },
       );
       //personalSponsor
       await this.ResidentModel.updateOne(
-        { _id: createdResident._id },
+        { _id: createdResident.id },
         { $addToSet: { personalSponsor: personalSponsor } },
       );
       //Returning updated resident
       const updatedResident = await this.ResidentModel.findById(
-        createdResident._id,
+        createdResident.id,
       ).exec();
       return updatedResident;
     }
@@ -181,7 +180,7 @@ export class ResidentService {
     return await this.ResidentModel.update({ _id: residentId }, edit).exec();
   }
 
-  async addPicsToGallery(residentId, picture: createResidentGalleryDto) {
+  async addPicsToGallery(residentId, picture: CreateResidentGalleryDto) {
     await this.ResidentModel.updateOne(
       { _id: residentId },
       { $addToSet: { gallery: picture } },
@@ -191,7 +190,7 @@ export class ResidentService {
   async editGalleryPics(
     residentId,
     pictureId: string,
-    newPicture: createResidentGalleryDto,
+    newPicture: CreateResidentGalleryDto,
   ) {
     const residentPicture = await this.ResidentModel.findById(
       residentId,
@@ -240,7 +239,7 @@ export class ResidentService {
     }
   }
 
-  async addRelatedCoResident(residentId, coResident: RelatedCoResidentDto) {
+  async addRelatedCoResident(residentId, coResident: CreateRelatedCoResidentDto) {
     await this.ResidentModel.updateOne(
       { _id: residentId },
       { $addToSet: { relatedCoResident: coResident } },
@@ -250,7 +249,7 @@ export class ResidentService {
   async editRelatedCoResident(
     residentId,
     coResidentId: string,
-    newResident: RelatedCoResidentDto,
+    newResident: EditRelatedCoResidentDto,
   ) {
     const coResident = await this.ResidentModel.findById(
       residentId,
@@ -296,7 +295,7 @@ export class ResidentService {
     }
   }
 
-  async addPersonalSponsor(residentId, personalSponsor: PersonalSponsorDto) {
+  async addPersonalSponsor(residentId, personalSponsor: CreatePersonalSponsorDto) {
     await this.ResidentModel.updateOne(
       { _id: residentId },
       { $addToSet: { personalSponsor: personalSponsor } },
@@ -306,7 +305,7 @@ export class ResidentService {
   async editPersonalSponsor(
     residentId: string,
     sponsorId: string,
-    newPersonalSponsor: PersonalSponsorDto,
+    newPersonalSponsor: EditPersonalSponsorDto,
   ) {
     const personalSponsor = await this.ResidentModel.findById(
       residentId,

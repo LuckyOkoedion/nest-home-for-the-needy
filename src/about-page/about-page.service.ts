@@ -3,14 +3,14 @@ import {
   CreateAboutPageDto,
   EditAboutPageDto,
 } from './dto/create-about-page.dto';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectModel } from "nestjs-typegoose";
 import { ReturnModelType } from "@typegoose/typegoose";
 import { AboutPage } from './schemas/about-page.schema';
 
 @Injectable()
 export class AboutPageService {
   constructor(
-    @InjectModel('AboutPage')
+    @InjectModel(AboutPage)
     private readonly AboutPageModel: ReturnModelType<typeof AboutPage>,
   ) {}
   async createAboutPageData(aboutPage: CreateAboutPageDto) {

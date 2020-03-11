@@ -3,7 +3,6 @@ import {
   IsString,
   IsDate,
   IsBoolean,
-  IsPhoneNumber,
   IsNumber,
 } from 'class-validator';
 
@@ -36,7 +35,7 @@ export class User {
     default: false,
   })
   hasVerifiedEmail: boolean;
-  @IsPhoneNumber('ZZ')
+  @IsString()
   @prop({
     required: true,
   })
@@ -60,7 +59,7 @@ export class User {
   organisation: string;
   @IsString()
   @prop()
-  type: string;
+  typeOfUser: string;
   @IsNumber()
   @prop({ default: 5 })
   accessLevel: number;

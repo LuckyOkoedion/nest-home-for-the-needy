@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { CreateBlogPageDto } from './dto/create-blog-page.dto';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectModel } from "nestjs-typegoose";
 import { ReturnModelType } from '@typegoose/typegoose';
 import { BlogPage } from './schemas/blog-page.schema';
 
 @Injectable()
 export class BlogPageService {
   constructor(
-    @InjectModel('BlogPage') private readonly BlogPageModel: ReturnModelType<typeof BlogPage>,
+    @InjectModel(BlogPage) private readonly BlogPageModel: ReturnModelType<typeof BlogPage>,
   ) {}
   async createBlogPageData(blogPage: CreateBlogPageDto) {
     //Ensure that there is only one instance of the document in the database.

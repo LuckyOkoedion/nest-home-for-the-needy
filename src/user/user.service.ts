@@ -5,10 +5,9 @@ import {
   Scope,
   Inject,
 } from '@nestjs/common';
-import { IUser, IUserBody } from './interfaces/user.interface';
 import * as bcrypt from 'bcrypt';
-import { InjectModel } from '@nestjs/mongoose';
-import { EditUserDto } from './dto/create-user.dto';
+import { InjectModel } from "nestjs-typegoose";
+import { EditUserDto, CreateUserWithoutPasswordDto } from './dto/create-user.dto';
 import { REQUEST } from '@nestjs/core';
 import { RequestWithUserData } from 'express.interface';
 import { ReturnModelType } from '@typegoose/typegoose';
@@ -17,16 +16,16 @@ import { User } from './schemas/user.schema';
 @Injectable({ scope: Scope.REQUEST })
 export class UserService {
   constructor(
-    @InjectModel('User') private readonly UserModel: ReturnModelType<typeof User>,
+    @InjectModel(User) private readonly UserModel: ReturnModelType<typeof User>,
     @Inject(REQUEST) private readonly request: RequestWithUserData,
-  ) {}
+  ) { }
 
-  async signUp(userBody: IUserBody, password: string) {
+  async signUp(userBody: CreateUserWithoutPasswordDto, password: string) {
     // Make the first user created in the users collection a superuser with highest accessLevel = 1
     const numberOfDocuments = await this.UserModel.estimatedDocumentCount();
     if (numberOfDocuments < 1) {
       //Create the user with the private 'createUser()' method detailed below
-      const createdUser = await this.createUser(userBody, password);
+      const createdUser: User = await this.createUser(userBody, password);
       //Retrieve the userId
       const userId = createdUser._id;
       // Update the user with the highest accessLevel =1
@@ -41,8 +40,8 @@ export class UserService {
     }
   }
 
-  async findUserWithEmail(email) {
-    const result = await this.UserModel.find({ email: email }).exec();
+  async findUserWithEmail(theMail:string) {
+    const result = await this.UserModel.find({ email: theMail }).exec();
     return result;
   }
 
@@ -61,7 +60,7 @@ export class UserService {
   async editOwnProfile(userId: string, edit: EditUserDto) {
     const editorUserId: string = this.request.userData.userId;
     const theProfile = await this.UserModel.findById(userId);
-    if (theProfile._id === editorUserId) {
+    if (theProfile.id === editorUserId) {
       return await this.UserModel.update({ _id: userId }, edit).exec();
     } else {
       throw new Error(
@@ -73,7 +72,7 @@ export class UserService {
   async deleteOwnAccount(userId: string) {
     const editorUserId: string = this.request.userData.userId;
     const theProfile = await this.UserModel.findById(userId);
-    if (theProfile._id === editorUserId) {
+    if (theProfile.id === editorUserId) {
       return await this.UserModel.remove({ _id: userId });
     } else {
       throw new Error(
@@ -120,14 +119,14 @@ export class UserService {
     // first set hasVerifiedEmail to false in database
   }
 
-  async sendPasswordChangeLink(email) {}
+  async sendPasswordChangeLink(email) { }
 
-  async passwordChange(newPassword) {}
+  async passwordChange(newPassword) { }
 
   // Private methods
 
-  private async createUser(userBody: IUserBody, password: string) {
-    let createdUser: IUser;
+  private async createUser(userBody: CreateUserWithoutPasswordDto, password: string) {
+    let createdUser: User;
     //Search for user with email
     await this.UserModel.find({ email: userBody.email })
       .exec()

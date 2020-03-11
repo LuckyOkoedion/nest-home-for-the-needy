@@ -1,15 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { CreateHomePageDto, EditHomePageDto } from './dto/create-home-page.dto';
-import { Model } from 'mongoose';
-import { IHomePage } from './interfaces/home-page.interface';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectModel } from "nestjs-typegoose";
 import { ReturnModelType } from '@typegoose/typegoose';
 import { HomePage } from './schemas/home-page.schema';
 
 @Injectable()
 export class HomePageService {
   constructor(
-    @InjectModel('HomePage') private readonly HomePageModel: ReturnModelType<typeof HomePage>,
+    @InjectModel(HomePage) private readonly HomePageModel: ReturnModelType<typeof HomePage>,
   ) {}
   async createHomePageData(homePage: CreateHomePageDto) {
     //Ensure that there is only one instance of the document in the database.

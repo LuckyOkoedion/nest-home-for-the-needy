@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, IsOptional } from 'class-validator';
 
 export class CreateHomePageDto {
   @IsString()
@@ -22,10 +22,13 @@ export class HomePageWithoutPicDto {
 }
 
 export class EditHomePageDto {
+  @IsOptional()
   @IsString()
   readonly bigText?: string;
+  @IsOptional()
   @IsString()
   readonly bannerPic?: string;
+  @IsOptional()
   @IsString()
   readonly ourCauses?: string;
 }

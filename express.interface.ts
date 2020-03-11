@@ -1,8 +1,8 @@
 import { Request } from 'express';
-import { IUserData } from 'src/user/interfaces/user.interface';
+import { UserDataDto } from 'src/user/dto/create-user.dto';
 
 export interface RequestWithUserData extends Request {
-  userData: IUserData;
+  userData: UserDataDto;
 }
 
 export interface ResponseWithError<Error> {

@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { CreateProjectDto } from './dto/create-project.dto';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectModel } from "nestjs-typegoose";
 import { ReturnModelType } from '@typegoose/typegoose';
 import { Project } from './schemas/project.schema';
 
 @Injectable()
 export class ProjectService {
   constructor(
-    @InjectModel('Project')
+    @InjectModel(Project)
     private readonly ProjectModel: ReturnModelType<typeof Project>,
   ) {}
   async createProject(project: CreateProjectDto) {

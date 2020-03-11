@@ -12,7 +12,7 @@ export class TheEventManager {
   @IsString()
   @prop({ required: true })
   name: string;
-  @IsPhoneNumber('ZZ')
+  @IsString()
   @prop({ required: true })
   phoneNo: string;
   @IsString()
@@ -24,7 +24,7 @@ export class TheInvitees {
   @IsString()
   @prop({ required: true })
   name: string;
-  @IsPhoneNumber('ZZ')
+  @IsString()
   @prop({ required: true })
   phoneNO: string;
   @IsBoolean()
