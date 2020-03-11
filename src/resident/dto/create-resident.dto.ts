@@ -5,277 +5,247 @@ import {
   IsDate,
   IsBoolean,
   IsObject,
+  IsOptional,
+  IsNumber,
 } from 'class-validator';
 
-export class ResidentWithoutArraysDto {
+export class CreateResidentGalleryDto {
   @IsString()
-  @IsNotEmpty()
-  readonly firstName: string;
+  readonly picture!: string;
+
   @IsString()
-  @IsNotEmpty()
-  readonly lastName: string;
+  readonly pictureName!: string;
   @IsString()
-  @IsNotEmpty()
-  readonly otherName: string;
-  @IsString()
-  @IsNotEmpty()
-  readonly gender: string;
-  @IsString()
-  @IsNotEmpty()
-  readonly maritalStatus: string;
-  @IsString()
-  readonly campHouseId?: string;
-  @IsString()
-  @IsNotEmpty()
-  readonly countryOfOrigin: string;
-  @IsString()
-  @IsNotEmpty()
-  readonly stateOfOrigin: string;
-  @IsString()
-  @IsNotEmpty()
-  readonly localGovtOfOrigin: string;
+  readonly occassionCaptured!: string;
   @IsDate()
-  @IsNotEmpty()
-  readonly dateOfBirth: Date;
-  @IsString()
-  @IsNotEmpty()
-  readonly placeOfBirth: string;
-  @IsString()
-  @IsNotEmpty()
-  readonly historyOfArrival: string;
-  @IsDate()
-  @IsNotEmpty()
-  readonly dateOfArrival: Date;
+  readonly dateCaptured!: Date;
+  @IsOptional()
   @IsBoolean()
-  @IsNotEmpty()
-  readonly public: boolean;
-  @IsArray()
-  readonly personalSponsor?: [{}];
-  @IsObject()
-  readonly currentBenefits?: {
-    readonly education?: {
-      readonly primaryOrJuniorSecSchool?: {
-        readonly class: string;
-        readonly lastPositionInClass: number;
-        readonly classSize: number;
-      };
-      readonly seniorOrSecondarySchool?: {
-        readonly class: string;
-        readonly specialty: string;
-        readonly careerChoice: string;
-      };
-      readonly tertiary?: {
-        readonly class: string;
-        readonly course: string;
-      };
-    };
-    readonly feeding: boolean;
-    readonly accommodation: boolean;
-    readonly clothing: boolean;
-  };
+  readonly approved?: boolean;
 }
 
-export class RelatedCoResidentDto {
-  readonly id?: string;
-  readonly relativeUserId: string;
-  readonly relationship: string;
+export class CreateRelatedCoResidentDto {
+  @IsString()
+  readonly relativeUserId!: string;
+  @IsString()
+  readonly relationship!: string;
 }
 
-export class PersonalSponsorDto {
-  readonly id?: string;
-  readonly sponsorUserId: string;
-  readonly purposeOfSponsorship: string;
+export class EditRelatedCoResidentDto {
+  @IsOptional()
+  @IsString()
+  readonly relativeUserId?: string;
+  @IsOptional()
+  @IsString()
+  readonly relationship?: string;
+}
+
+export class CreatePersonalSponsorDto {
+  @IsString()
+  readonly sponsorUserId!: string;
+  @IsString()
+  readonly purposeOfSponsorship!: string;
+  @IsString()
   readonly statusOfSponsorship: string;
+}
+
+export class EditPersonalSponsorDto {
+  @IsOptional()
+  @IsString()
+  readonly sponsorUserId?: string;
+  @IsOptional()
+  @IsString()
+  readonly purposeOfSponsorship?: string;
+  @IsOptional()
+  @IsString()
+  readonly statusOfSponsorship?: string;
+}
+
+export class PrimaryOrJuniorSecSchoolDto {
+  @IsString()
+  readonly schoolClass: string;
+  @IsNumber()
+  readonly lastPositionInClass!: number;
+  @IsNumber()
+  readonly classSize!: number;
+}
+
+export class SeniorSecSchoolDto {
+  @IsString()
+  readonly schoolClass!: string;
+  @IsString()
+  readonly specialty!: string;
+  @IsString()
+  readonly careerChoice: string;
+}
+
+export class TertiaryDto {
+  @IsString()
+  readonly schoolClass!: string;
+  @IsString()
+  readonly course!: string;
+}
+
+export class EducationBenefitDto {
+  @IsOptional()
+  @IsObject()
+  readonly primaryOrJuniorSecSchool?: PrimaryOrJuniorSecSchoolDto;
+  @IsOptional()
+  @IsObject()
+  readonly seniorSecSchool?: SeniorSecSchoolDto;
+  @IsOptional()
+  @IsObject()
+  readonly tertiary?: TertiaryDto;
+}
+
+export class CurrentBenefitsDto {
+  @IsOptional()
+  @IsObject()
+  readonly education?: EducationBenefitDto;
+  @IsBoolean()
+  readonly feeding: boolean;
+  @IsBoolean()
+  readonly accommodation: boolean;
+  @IsBoolean()
+  readonly clothing: boolean;
 }
 
 export class CreateResidentDto {
   @IsString()
-  @IsNotEmpty()
-  readonly firstName: string;
+  readonly firstName!: string;
   @IsString()
-  @IsNotEmpty()
-  readonly lastName: string;
+  readonly lastName!: string;
   @IsString()
-  @IsNotEmpty()
-  readonly otherName: string;
+  readonly otherName!: string;
   @IsString()
-  @IsNotEmpty()
-  readonly gender: string;
+  readonly gender!: string;
   @IsString()
-  @IsNotEmpty()
-  readonly maritalStatus: string;
-  @IsString()
-  readonly campHouseId?: string;
+  readonly maritalStatus!: string;
   @IsArray()
-  @IsNotEmpty()
-  readonly gallery?: [
-    {
-      readonly picture: string;
-      readonly pictureName: string;
-      readonly dateCaptured: Date;
-      readonly occassionCaptured: string;
-      readonly approved: boolean;
-    },
-  ];
+  readonly gallery: CreateResidentGalleryDto[];
   @IsString()
-  @IsNotEmpty()
-  readonly countryOfOrigin: string;
+  readonly countryOfOrigin!: string;
   @IsString()
-  @IsNotEmpty()
-  readonly stateOfOrigin: string;
+  readonly stateOfOrigin!: string;
   @IsString()
-  @IsNotEmpty()
-  readonly localGovtOfOrigin: string;
+  readonly localGovtOfOrigin!: string;
   @IsDate()
-  @IsNotEmpty()
   readonly dateOfBirth: Date;
   @IsString()
-  @IsNotEmpty()
   readonly placeOfBirth: string;
   @IsString()
-  @IsNotEmpty()
   readonly historyOfArrival: string;
   @IsDate()
-  @IsNotEmpty()
-  readonly dateOfArrival: Date;
+  readonly dateOfArrival!: Date;
   @IsBoolean()
-  @IsNotEmpty()
-  readonly public: boolean;
+  readonly makePublic: boolean;
   @IsArray()
-  readonly relatedCoResident?: [
-    {
-      readonly relativeUserId: string;
-      readonly relationship: string;
-    },
-  ];
+  readonly relatedCoResident: CreateRelatedCoResidentDto[];
   @IsArray()
-  readonly personalSponsor?: [
-    {
-      readonly sponsorUserId: string;
-      readonly purposeOfSponsorship: string;
-      readonly statusOfSponsorship: string;
-    },
-  ];
+  readonly personalSponsor: CreatePersonalSponsorDto[];
   @IsObject()
-  readonly currentBenefits?: {
-    readonly education?: {
-      readonly primaryOrJuniorSecSchool?: {
-        readonly class: string;
-        readonly lastPositionInClass: number;
-        readonly classSize: number;
-      };
-      readonly seniorOrSecondarySchool?: {
-        readonly class: string;
-        readonly specialty: string;
-        readonly careerChoice: string;
-      };
-      readonly tertiary?: {
-        readonly class: string;
-        readonly course: string;
-      };
-    };
-    readonly feeding: boolean;
-    readonly accommodation: boolean;
-    readonly clothing: boolean;
-  };
+  readonly currentBenefits: CurrentBenefitsDto;
 }
+
+export class ResidentWithoutArraysDto {
+  @IsString()
+  readonly firstName!: string;
+  @IsString()
+  readonly lastName!: string;
+  @IsString()
+  readonly otherName!: string;
+  @IsString()
+  readonly gender!: string;
+  @IsString()
+  readonly maritalStatus!: string;
+  @IsString()
+  readonly countryOfOrigin!: string;
+  @IsString()
+  readonly stateOfOrigin!: string;
+  @IsString()
+  readonly localGovtOfOrigin!: string;
+  @IsDate()
+  readonly dateOfBirth: Date;
+  @IsString()
+  readonly placeOfBirth: string;
+  @IsString()
+  readonly historyOfArrival: string;
+  @IsDate()
+  readonly dateOfArrival!: Date;
+  @IsBoolean()
+  readonly makePublic: boolean;
+  @IsObject()
+  readonly currentBenefits: CurrentBenefitsDto;
+
+}
+
 
 export class EditResidentDto {
+  @IsOptional()
   @IsString()
   readonly firstName?: string;
+  @IsOptional()
   @IsString()
   readonly lastName?: string;
+  @IsOptional()
   @IsString()
   readonly otherName?: string;
+  @IsOptional()
   @IsString()
   readonly gender?: string;
+  @IsOptional()
   @IsString()
   readonly maritalStatus?: string;
-  @IsString()
-  readonly campHouseId?: string;
+  @IsOptional()
   @IsArray()
-  readonly gallery?: [
-    {
-      readonly picture: string;
-      readonly pictureName: string;
-      readonly dateCaptured: Date;
-      readonly occassionCaptured: string;
-      readonly approved: boolean;
-    },
-  ];
+  readonly gallery?: CreateResidentGalleryDto[];
   @IsString()
+  @IsOptional()
   readonly countryOfOrigin?: string;
   @IsString()
+  @IsOptional()
   readonly stateOfOrigin?: string;
+  @IsOptional()
   @IsString()
   readonly localGovtOfOrigin?: string;
+  @IsOptional()
   @IsDate()
   readonly dateOfBirth?: Date;
+  @IsOptional()
   @IsString()
   readonly placeOfBirth?: string;
+  @IsOptional()
   @IsString()
   readonly historyOfArrival?: string;
+  @IsOptional()
   @IsDate()
   readonly dateOfArrival?: Date;
+  @IsOptional()
   @IsBoolean()
-  readonly public?: boolean;
+  readonly makePublic?: boolean;
+  @IsOptional()
   @IsArray()
-  readonly relatedCoResident?: [
-    {
-      readonly relativeUserId: string;
-      readonly relationship: string;
-    },
-  ];
+  readonly relatedCoResident?: CreateRelatedCoResidentDto[];
+  @IsOptional()
   @IsArray()
-  readonly personalSponsor?: [
-    {
-      readonly sponsorUserId: string;
-      readonly purposeOfSponsorship: string;
-      readonly donations: [
-        {
-          readonly lastDonationDate: Date;
-          readonly amount: number;
-        },
-      ];
-      readonly statusOfSponsorship: string;
-    },
-  ];
+  readonly personalSponsor?: CreatePersonalSponsorDto[];
+  @IsOptional()
   @IsObject()
-  readonly currentBenefits?: {
-    readonly education: {
-      readonly primaryOrJuniorSecSchool?: {
-        readonly class: string;
-        readonly lastPositionInClass: number;
-        readonly classSize: number;
-      };
-      readonly seniorOrSecondarySchool?: {
-        readonly class: string;
-        readonly specialty: string;
-        readonly careerChoice: string;
-      };
-      readonly tertiary?: {
-        readonly class: string;
-        readonly course: string;
-      };
-    };
-    readonly feeding: boolean;
-    readonly accommodation: boolean;
-    readonly clothing: boolean;
-  };
+  readonly currentBenefits?: CurrentBenefitsDto;
 }
 
-export class createResidentGalleryWithoutPicDto {
-  readonly pictureName: string;
-  readonly dateCaptured?: Date;
-  readonly occassionCaptured: string;
-  readonly approved?: boolean;
+export class CreateResidentGalleryWithoutPicDto {
+  @IsString()
+  readonly title: string;
+  @IsString()
+  readonly pictureName!: string;
+  @IsString()
+  readonly occassionCaptured!: string;
+  @IsDate()
+  readonly dateCaptured!: Date;
+  @IsBoolean()
+  readonly approved!: boolean;
+
 }
 
-export class createResidentGalleryDto {
-  readonly id?: string;
-  readonly picture: string;
-  readonly pictureName: string;
-  readonly dateCaptured?: Date;
-  readonly occassionCaptured: string;
-  readonly approved?: boolean;
-}
+

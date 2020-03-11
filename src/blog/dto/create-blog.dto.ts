@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsDate, IsObject } from 'class-validator';
+import { IsNotEmpty, IsString, IsDate, IsObject, IsOptional } from 'class-validator';
 
 export class CreateBlogDto {
   @IsString()
@@ -18,14 +18,19 @@ export class CreateBlogDto {
 }
 
 export class EditBlogDto {
+  @IsOptional()
   @IsString()
   readonly title?: string;
+  @IsOptional()
   @IsString()
   readonly category?: string;
+  @IsOptional()
   @IsString()
   readonly pic?: string;
+  @IsOptional()
   @IsString()
   readonly body?: string;
+  @IsOptional()
   @IsDate()
   readonly timestamp?: Date;
 }

@@ -1,13 +1,13 @@
 import { Injectable} from '@nestjs/common';
 import { CreateCampHouseDto } from './dto/create-camp-house.dto';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectModel } from "nestjs-typegoose";
 import { ReturnModelType } from '@typegoose/typegoose';
 import { CampHouse } from './schemas/camp-house.schema';
 
 @Injectable()
 export class CampHouseService {
   constructor(
-    @InjectModel('CampHouse')
+    @InjectModel(CampHouse)
     private readonly CampHouseModel: ReturnModelType<typeof CampHouse>,
   ) {}
   async createCampHouse(campHouse: CreateCampHouseDto) {

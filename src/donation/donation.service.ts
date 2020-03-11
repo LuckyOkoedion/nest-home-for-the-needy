@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { CreateDonationDto } from './dto/create-donation.dto';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectModel } from "nestjs-typegoose";
 import { ReturnModelType } from '@typegoose/typegoose';
 import { Donation } from './schemas/donation.schema';
 
 @Injectable()
 export class DonationService {
   constructor(
-    @InjectModel('Donation')
+    @InjectModel(Donation)
     private readonly DonationModel: ReturnModelType<typeof Donation>,
   ) {}
   async createDonation(donation: CreateDonationDto) {

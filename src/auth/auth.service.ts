@@ -10,7 +10,7 @@ export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly userService: UserService,
-  ) {}
+  ) { }
 
   async validateUser(email: string): Promise<any> {
     const result = await this.userService.findUserWithEmail(email);
@@ -22,7 +22,7 @@ export class AuthService {
       if (user.accessLevel === 1) {
         const userData = {
           email: user.email,
-          userId: user._id,
+          userId: user.id,
           clearanceLevel: user.accessLevel,
           permissions: [
             permissionsEnum.DELETE_OWN_COMMENT,
@@ -69,7 +69,7 @@ export class AuthService {
       if (user.accessLevel === 2) {
         const userData = {
           email: user.email,
-          userId: user._id,
+          userId: user.id,
           clearanceLevel: user.accessLevel,
           permissions: [
             permissionsEnum.CREATE_PUBLIC_SITE_DATA,
@@ -111,7 +111,7 @@ export class AuthService {
       if (user.accessLevel === 3) {
         const userData = {
           email: user.email,
-          userId: user._id,
+          userId: user.id,
           clearanceLevel: user.accessLevel,
           permissions: [
             permissionsEnum.APPROVE_BLOG,
@@ -138,7 +138,7 @@ export class AuthService {
       if (user.accessLevel === 4) {
         const userData = {
           email: user.email,
-          userId: user._id,
+          userId: user.id,
           clearanceLevel: user.accessLevel,
           permissions: [
             permissionsEnum.CREATE_BLOG,
@@ -162,7 +162,7 @@ export class AuthService {
       if (user.accessLevel === 5) {
         const userData = {
           email: user.email,
-          userId: user._id,
+          userId: user.id,
           clearanceLevel: user.accessLevel,
           permissions: [
             permissionsEnum.READ_PROJECTS,
@@ -183,7 +183,7 @@ export class AuthService {
     let payload: any = undefined;
     // Search for user with email
     return await this.userService
-      .findUserWithEmail({ email: login.email })
+      .findUserWithEmail(login.email)
       // if not found, return error
       .then(async user => {
         if (user.length < 1) {
@@ -191,7 +191,7 @@ export class AuthService {
           error.message = 'No such user in database';
           throw error;
         }
-        payload = { email: user[0].email, sub: user[0]._id };
+        payload = { email: user[0].email, sub: user[0].id };
         // if found, bcrypt compare provided password with hashed password
         return await bcrypt.compare(login.password, user[0].password);
       })

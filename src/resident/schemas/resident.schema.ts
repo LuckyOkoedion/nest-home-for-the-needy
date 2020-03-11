@@ -18,12 +18,6 @@ export class ResidentGallery {
   @prop({
     required: true,
   })
-  title!: string;
-
-  @IsString()
-  @prop({
-    required: true,
-  })
   picture!: string;
 
   @IsString()

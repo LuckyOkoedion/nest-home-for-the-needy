@@ -1,15 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { CreateNavFooterDto } from './dto/create-nav-footer.dto';
-import { Model } from 'mongoose';
-import { INavFooter } from './interfaces/nav-footer.interface';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectModel } from "nestjs-typegoose";
 import { ReturnModelType } from '@typegoose/typegoose';
 import { NavFooter } from './schemas/nav-footer.schema';
 
 @Injectable()
 export class NavFooterService {
   constructor(
-    @InjectModel('NavFooter')
+    @InjectModel(NavFooter)
     private readonly NavFooterModel: ReturnModelType<typeof NavFooter>,
   ) {}
   async createNavFooterData(navFooter: CreateNavFooterDto) {

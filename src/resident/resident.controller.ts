@@ -15,10 +15,13 @@ import { ResidentService } from './resident.service';
 import {
   CreateResidentDto,
   ResidentWithoutArraysDto,
-  createResidentGalleryDto,
-  createResidentGalleryWithoutPicDto,
-  RelatedCoResidentDto,
-  PersonalSponsorDto,
+  CreateResidentGalleryDto,
+  CreateResidentGalleryWithoutPicDto,
+  CreateRelatedCoResidentDto,
+  EditResidentDto,
+  CreatePersonalSponsorDto,
+  EditPersonalSponsorDto,
+  EditRelatedCoResidentDto,
 } from './dto/create-resident.dto';
 import { Response } from 'express';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -30,7 +33,7 @@ import { permissionsEnum } from 'src/utils/permissions.enum';
 
 @Controller('/api/admin/resident')
 export class ResidentController {
-  constructor(private readonly residentService: ResidentService) {}
+  constructor(private readonly residentService: ResidentService) { }
 
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Post()
@@ -104,13 +107,13 @@ export class ResidentController {
   )
   async addPicsToGallery(
     @Param() params,
-    @Body() edit: createResidentGalleryWithoutPicDto,
+    @Body() edit: CreateResidentGalleryWithoutPicDto,
     @Res() res: Response,
     @UploadedFile() file?,
   ) {
     try {
       const residentId = params.residentId;
-      const thePicture: createResidentGalleryDto = {
+      const thePicture: CreateResidentGalleryDto = {
         picture: file.name,
         pictureName: edit.pictureName,
         dateCaptured: edit.dateCaptured,
@@ -139,14 +142,14 @@ export class ResidentController {
   )
   async editGalleryPics(
     @Param() params,
-    @Body() edit: createResidentGalleryWithoutPicDto,
+    @Body() edit: CreateResidentGalleryWithoutPicDto,
     @Res() res: Response,
     @UploadedFile() file?,
   ) {
     try {
       const residentId = params.residentId;
       const pictureId = params.pictureId;
-      const thePicture: createResidentGalleryDto = {
+      const thePicture: CreateResidentGalleryDto = {
         picture: file.name,
         pictureName: edit.pictureName,
         dateCaptured: edit.dateCaptured,
@@ -188,7 +191,7 @@ export class ResidentController {
   @Permissions(permissionsEnum.MANAGE_RESIDENTS)
   async addRelatedCoResident(
     @Param() params,
-    @Body() coResident: RelatedCoResidentDto,
+    @Body() coResident: CreateRelatedCoResidentDto,
     @Res() res: Response,
   ) {
     try {
@@ -211,7 +214,7 @@ export class ResidentController {
   @Permissions(permissionsEnum.MANAGE_RESIDENTS)
   async editRelatedCoResident(
     @Param() params,
-    @Body() newResident: RelatedCoResidentDto,
+    @Body() newResident: EditRelatedCoResidentDto,
     @Res() res: Response,
   ) {
     try {
@@ -255,7 +258,7 @@ export class ResidentController {
   @Permissions(permissionsEnum.MANAGE_RESIDENTS)
   async addPersonalSponsor(
     @Param() params,
-    @Body() personalSponsor: PersonalSponsorDto,
+    @Body() personalSponsor: CreatePersonalSponsorDto,
     @Res() res: Response,
   ) {
     try {
@@ -278,7 +281,7 @@ export class ResidentController {
   @Permissions(permissionsEnum.MANAGE_RESIDENTS)
   async editPersonalSponsor(
     @Param() params,
-    @Body() newSponsor: PersonalSponsorDto,
+    @Body() newSponsor: EditPersonalSponsorDto,
     @Res() res: Response,
   ) {
     try {

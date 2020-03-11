@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsEmail, IsDate } from 'class-validator';
+import { IsNotEmpty, IsString, IsEmail, IsDate, IsArray, IsOptional } from 'class-validator';
 
 export class CreateUserDto {
   @IsString()
@@ -10,11 +10,12 @@ export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
   readonly gender: string;
-  @IsDate()
-  readonly dateOfBirth: Date;
+  @IsString()
+  readonly dateOfBirthString: string;
+  @IsOptional()
   @IsString()
   readonly profilePic?: String;
-  @IsEmail()
+  @IsString()
   @IsNotEmpty()
   readonly email: string;
   @IsString()
@@ -33,25 +34,65 @@ export class CreateUserDto {
   readonly organisation: string;
 }
 
-export class EditUserDto {
+export class CreateUserWithoutPasswordDto {
   @IsString()
-  readonly firstName?: string;
+  @IsNotEmpty()
+  readonly firstName: string;
   @IsString()
-  readonly lastName?: string;
+  @IsNotEmpty()
+  readonly lastName: string;
   @IsString()
-  readonly gender?: string;
+  @IsNotEmpty()
+  readonly gender: string;
   @IsDate()
-  readonly dateOfBirth?: Date;
+  readonly dateOfBirth: Date;
+  @IsOptional()
   @IsString()
   readonly profilePic?: String;
-  @IsEmail()
+  @IsString()
+  @IsNotEmpty()
+  readonly email: string;
+  @IsString()
+  @IsNotEmpty()
+  readonly phoneNo: string;
+  @IsString()
+  @IsNotEmpty()
+  readonly nationality: string;
+  @IsString()
+  @IsNotEmpty()
+  readonly religion: string;
+  @IsString()
+  readonly organisation: string;
+}
+
+export class EditUserDto {
+  @IsOptional()
+  @IsString()
+  readonly firstName?: string;
+  @IsOptional()
+  @IsString()
+  readonly lastName?: string;
+  @IsOptional()
+  @IsString()
+  readonly gender?: string;
+  @IsOptional()
+  @IsDate()
+  readonly dateOfBirth?: Date;
+  @IsOptional()
+  @IsString()
+  readonly profilePic?: String;
+  @IsOptional()
+  @IsString()
   readonly email?: string;
   @IsString()
   readonly phoneNo?: string;
+  @IsOptional()
   @IsString()
   readonly nationality?: string;
+  @IsOptional()
   @IsString()
   readonly religion?: string;
+  @IsOptional()
   @IsString()
   readonly organisation?: string;
 }
@@ -59,8 +100,20 @@ export class EditUserDto {
 export class LoginDto {
   @IsString()
   @IsNotEmpty()
-  email: string;
+  readonly email: string;
   @IsString()
   @IsNotEmpty()
-  password: string;
+  readonly password: string;
+}
+
+export class UserDataDto {
+  @IsString()
+  readonly email: string;
+  @IsString()
+  readonly userId: string;
+  @IsString()
+  readonly clearanceLevel: string;
+  @IsOptional()
+  @IsArray()
+  readonly permissions?: [];
 }

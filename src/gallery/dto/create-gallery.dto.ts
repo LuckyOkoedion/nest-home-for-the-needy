@@ -4,6 +4,7 @@ import {
   IsBoolean,
   IsArray,
   IsDate,
+  IsOptional,
 } from 'class-validator';
 
 export class CreateGalleryDto {
@@ -16,6 +17,7 @@ export class CreateGalleryDto {
   @IsDate()
   @IsNotEmpty()
   readonly dateCaptured: Date;
+  @IsOptional()
   @IsArray()
   readonly peopleInPictureUserId?: string[];
   @IsString()
@@ -33,6 +35,7 @@ export class CreateGalleryWithoutPicDto {
   @IsDate()
   @IsNotEmpty()
   readonly dateCaptured: Date;
+  @IsOptional()
   @IsArray()
   readonly peopleInPictureUserId?: string[];
   @IsString()
@@ -44,16 +47,22 @@ export class CreateGalleryWithoutPicDto {
 }
 
 export class EditGalleryDto {
+  @IsOptional()
   @IsString()
   readonly picture?: string;
+  @IsOptional()
   @IsString()
   readonly pictureName?: string;
+  @IsOptional()
   @IsDate()
   readonly dateCaptured?: Date;
+  @IsOptional()
   @IsArray()
   readonly peopleInPictureUserId?: string[];
+  @IsOptional()
   @IsString()
   readonly occassionCaptured?: string;
+  @IsOptional()
   @IsBoolean()
   readonly approved?: Boolean;
 }

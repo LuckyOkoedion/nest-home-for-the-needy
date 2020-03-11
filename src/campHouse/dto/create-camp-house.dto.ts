@@ -1,8 +1,10 @@
-import { IsString, IsArray } from 'class-validator';
+import { IsString, IsArray, IsOptional } from 'class-validator';
 
 export class CreateCampHouseDto {
+  @IsOptional()
   @IsArray()
-  readonly residentsIds?: [string];
+  readonly residentsIds?: string[];
+  @IsOptional()
   @IsString()
   readonly leaderResidentId?: string;
 }

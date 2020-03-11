@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsString, IsNumber, IsOptional } from 'class-validator';
 
 export class CreateAboutPageDto {
   @IsString()
@@ -115,42 +115,60 @@ export class CreateAboutPageWithoutPicturesDto {
 }
 
 export class EditAboutPageDto {
+  @IsOptional()
   @IsString()
   readonly bigText?: string;
+  @IsOptional()
   @IsString()
   readonly biodesc?: string;
+  @IsOptional()
   @IsString()
   readonly servedTitle?: string;
+  @IsOptional()
   @IsNumber()
   readonly servedNo?: number;
+  @IsOptional()
   @IsString()
   readonly servedSubTitle?: string;
+  @IsOptional()
   @IsString()
   readonly donateTitle?: string;
+  @IsOptional()
   @IsString()
   readonly donateSub?: string;
+  @IsOptional()
   @IsString()
   readonly donateBtn?: string;
+  @IsOptional()
   @IsString()
   readonly volunteerTitle?: string;
+  @IsOptional()
   @IsString()
   readonly volunteerSub?: string;
+  @IsOptional()
   @IsString()
   readonly volunteerBtn?: string;
+  @IsOptional()
   @IsString()
   readonly latestDonationTitle?: string;
+  @IsOptional()
   @IsString()
   readonly latestDonationQuote?: string;
+  @IsOptional()
   @IsString()
   readonly bannerPic?: string;
+  @IsOptional()
   @IsString()
   readonly bioPic?: string;
   @IsString()
   readonly donorName?: string;
+  @IsOptional()
   @IsString()
   readonly justNow?: string;
+  @IsOptional()
   @IsString()
   readonly donateFor?: string;
+  @IsOptional()
   @IsString()
   readonly donatePurpose?: string;
 }

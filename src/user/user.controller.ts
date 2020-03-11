@@ -18,7 +18,6 @@ import {
 import { CreateUserDto, EditUserDto } from './dto/create-user.dto';
 import { UserService } from './user.service';
 import { Response } from 'express';
-import { IUser } from './interfaces/user.interface';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { PermissionsGuard } from 'src/auth/permissions.guard';
 import { Permissions } from 'src/auth/permissions.decorator';
@@ -27,13 +26,14 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { imageFileFilter } from 'src/utils/file-uploading.utils';
 import { REQUEST } from '@nestjs/core';
 import { permissionsEnum } from 'src/utils/permissions.enum';
+import { User } from './schemas/user.schema';
 
 @Controller({ path: '/api/admin/user', scope: Scope.REQUEST })
 export class UserController {
   constructor(
     private readonly userService: UserService,
     @Inject(REQUEST) private readonly req: RequestWithUserData,
-  ) {}
+  ) { }
 
   @Post('/register')
   async signUp(@Body() user: CreateUserDto, @Res() res: Response) {
@@ -41,7 +41,7 @@ export class UserController {
       firstName: user.firstName,
       lastName: user.lastName,
       gender: user.gender,
-      dateOfBirth: new Date(),
+      dateOfBirth: new Date(user.dateOfBirthString),
       email: user.email,
       phoneNo: user.phoneNo,
       nationality: user.nationality,
@@ -50,12 +50,12 @@ export class UserController {
     };
     const password = user.password;
     try {
-      const createdUser: IUser = await this.userService.signUp(
+      const createdUser: User = await this.userService.signUp(
         userBody,
         password,
       );
       if (createdUser) {
-        const toReturn = {
+       const toReturn = {
           id: createdUser._id,
           firstName: createdUser.firstName,
           lastName: createdUser.lastName,
@@ -83,7 +83,7 @@ export class UserController {
       if (allUsers) {
         const cleanedData = allUsers.map(value => {
           return {
-            id: value._id,
+            id: value.id,
             firstName: value.firstName,
             lastName: value.lastName,
             gender: value.gender,
@@ -107,7 +107,7 @@ export class UserController {
   async userDetail(@Param() params, @Res() res: Response) {
     try {
       const userId = params.userId;
-      const userProfile: IUser = await this.userService.getUserDetail(userId);
+      const userProfile: User = await this.userService.getUserDetail(userId);
 
       if (userProfile) {
         const toReturn = {
