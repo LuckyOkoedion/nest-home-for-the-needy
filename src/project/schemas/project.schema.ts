@@ -3,8 +3,6 @@ import { User } from 'src/user/schemas/user.schema';
 import { IsString, IsDate, IsNumber } from 'class-validator';
 
 export class Project {
-  @prop({ default: new mongoose.Types.ObjectId() })
-  _id: mongoose.Schema.Types.ObjectId;
   @IsString()
   @prop({
     required: true,

@@ -21,18 +21,24 @@ import {
   EditBlogDto,
 } from './dto/create-blog.dto';
 import { Response } from 'express';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { AuthenticatedGuard } from 'src/auth/authenticated.guard';
 import { PermissionsGuard } from 'src/auth/permissions.guard';
 import { Permissions } from 'src/auth/permissions.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { imageFileFilter } from 'src/utils/file-uploading.utils';
 import { permissionsEnum } from 'src/utils/permissions.enum';
+import { createWriteStream, unlink } from 'fs';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('/api/admin/blog')
 export class BlogController {
-  constructor(private readonly blogService: BlogService) {}
+  uploadPath: string;
+  constructor(private readonly blogService: BlogService,
+    private readonly config: ConfigService) {
+    this.uploadPath = this.config.get<string>('UPLOAD_PATH')
+  }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Post()
   @Permissions(permissionsEnum.CREATE_BLOG)
   @UseInterceptors(
@@ -46,9 +52,14 @@ export class BlogController {
     @UploadedFile() file?,
   ) {
     try {
-      const blogPic = file.name;
+      const blogPic = new Date().toISOString() + file.originalname;
       let theBlog: CreateBlogDto = { ...blog, pic: blogPic };
       await this.blogService.createBlog(theBlog).then(() => {
+        // save file to disk
+        const path = this.uploadPath + blogPic;
+        let fileStream = createWriteStream(path);
+        fileStream.write(file.buffer);
+        // Return response
         res.status(201).json({
           message: 'New blog created successfully',
         });
@@ -58,7 +69,7 @@ export class BlogController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Post('/:blogId/comment')
   @Permissions(permissionsEnum.MAKE_COMMENT)
   async comment(
@@ -66,11 +77,10 @@ export class BlogController {
     comment: {
       comment: string;
     },
-    @Param() params,
+    @Param('blogId') blogId,
     @Res() res: Response,
   ) {
     try {
-      const blogId: string = params.blogId;
       await this.blogService.commentOnBlog(comment, blogId).then(() => {
         res.status(201).json({
           message: 'new comment created successfully',
@@ -117,22 +127,21 @@ export class BlogController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Put('/:blogId/comment/:commentId/editOwnComment')
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
+  @Patch('/:blogId/comment/:commentId/editOwnComment')
   @Permissions(permissionsEnum.UPDATE_OWN_COMMENT)
   async editOwnComment(
     @Body()
     comment: {
       comment: string;
     },
-    @Param() params,
+    @Param('blogId') blogId,
+    @Param('commentId') commentId,
     @Res() res: Response,
   ) {
     try {
-      const commentId: string = params.commentId;
-      const blogId: string = params.blogId;
       await this.blogService
-        .editOwnComment(blogId, comment.comment, commentId)
+        .editOwnComment(blogId, commentId, comment.comment)
         .then(() => {
           res.status(200).json({
             message: 'Own comment edited successfully',
@@ -143,7 +152,7 @@ export class BlogController {
     }
   }
 
-  // @UseGuards(JwtAuthGuard, PermissionsGuard)
+  // @UseGuards(AuthenticatedGuard, PermissionsGuard)
   // @Put('/:blogId/othersComment/:commentId/editOthersComment')
   // @Permissions('update:othersComment')
   // async editOthersComment(
@@ -168,7 +177,7 @@ export class BlogController {
   //   }
   // }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Patch('/:blogId/editOwnBlog')
   @Permissions(permissionsEnum.UPDATE_OWN_BLOG)
   @UseInterceptors(
@@ -178,31 +187,47 @@ export class BlogController {
   )
   async editOwnBlog(
     @Body() edit,
-    @Param() params,
+    @Param('blogId') blogId,
     @Res() res: Response,
     @UploadedFile() file?,
   ) {
     try {
-      const blogId = params.blogId;
       let theEdit: EditBlogDto;
-      const blogPic = file.name;
+      const blogPic = new Date().toISOString() + file.originalname;
       if (file) {
         theEdit = { ...edit, pic: blogPic };
+        const theBlog = await this.blogService.getBlogDetail(blogId);
+        const oldFile = theBlog.pic;
+        const oldFilePath = this.uploadPath + oldFile;
+        await this.blogService.editOwnBlog(theEdit, blogId).then(() => {
+          //Delete the old file from disk
+          unlink(oldFilePath, err => {
+            if (err) throw err
+            // console.log(`successfully deleted ${oldFilePath}`);
+          })
+          //Save the new file to disk
+          const path = this.uploadPath + blogPic;
+          let fileStream = createWriteStream(path);
+          fileStream.write(file.buffer);
+          //Return response
+          res.status(200).json({
+            message: 'blog edited successfully',
+          });
+        });
       } else {
         theEdit = { ...edit };
-      }
-
-      await this.blogService.editOwnBlog(theEdit, blogId).then(() => {
-        res.status(200).json({
-          message: 'blog edited successfully',
+        await this.blogService.editOwnBlog(theEdit, blogId).then(() => {
+          res.status(200).json({
+            message: 'blog edited successfully',
+          });
         });
-      });
+      }
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.NOT_MODIFIED);
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Patch('/:blogId/editOthersBlog')
   @Permissions(permissionsEnum.UPDATE_OTHERS_BLOG)
   @UseInterceptors(
@@ -212,43 +237,66 @@ export class BlogController {
   )
   async editOthersBlog(
     @Body() edit,
-    @Param() params,
+    @Param('blogId') blogId,
     @Res() res: Response,
     @UploadedFile() file?,
   ) {
     try {
-      const blogId = params.blogId;
       let theEdit: EditBlogDto;
-      const blogPic = file.name;
+      const blogPic = new Date().toISOString() + file.originalname;
       if (file) {
         theEdit = { ...edit, pic: blogPic };
+        const theBlog = await this.blogService.getBlogDetail(blogId);
+        const oldFile = theBlog.pic;
+        const oldFilePath = this.uploadPath + oldFile;
+        await this.blogService.editOthersBlog(theEdit, blogId).then(() => {
+          //Delete the old file from disk
+          unlink(oldFilePath, err => {
+            if (err) throw err
+            // console.log(`successfully deleted ${oldFilePath}`);
+          })
+          //Save the new file to disk
+          const path = this.uploadPath + blogPic;
+          let fileStream = createWriteStream(path);
+          fileStream.write(file.buffer);
+          //Return response
+          res.status(200).json({
+            message: 'blog edited successfully',
+          });
+        });
       } else {
         theEdit = { ...edit };
+        await this.blogService.editOthersBlog(theEdit, blogId).then(() => {
+          res.status(200).json({
+            message: 'blog edited successfully',
+          });
+        });
       }
 
-      await this.blogService.editOthersBlog(theEdit, blogId).then(() => {
-        res.status(200).json({
-          message: 'blog edited successfully',
-        });
-      });
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.NOT_MODIFIED);
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Patch('/:blogId/approve')
   @Permissions(permissionsEnum.APPROVE_BLOG)
   async approveOrDisapproveBlog(
-    @Body() value: boolean,
-    @Param() params,
+    @Body() value: { value: boolean },
+    @Param('blogId') blogId,
     @Res() res: Response,
   ) {
+    let responseMessage: string;
     try {
-      const blogId: string = params.blogId;
-      await this.blogService.approveOrDisapproveBlog(value, blogId).then(() => {
+      if (value.value === true) {
+        responseMessage = 'blog approved ):'
+      }
+      if (value.value === false) {
+        responseMessage = 'You have disapproved this blog. Is that what you intended to do?'
+      }
+      await this.blogService.approveOrDisapproveBlog(value.value, blogId).then(() => {
         res.status(200).json({
-          message: 'blog approved ):',
+          message: responseMessage,
         });
       });
     } catch (error) {
@@ -256,13 +304,15 @@ export class BlogController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Put('/:blogId/:commentId/show')
   @Permissions(permissionsEnum.SHOW_HIDE_COMMENT)
-  async showComment(value = false, @Param() params, @Res() res: Response) {
+  async showComment(
+    value = false,
+    @Param('blogId') blogId,
+    @Param('commentId') commentId,
+    @Res() res: Response) {
     try {
-      const blogId = params.blogId;
-      const commentId = params.commentId;
       await this.blogService
         .hideOrShowComment(value, blogId, commentId)
         .then(() => {
@@ -275,13 +325,14 @@ export class BlogController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Put('/:blogId/:commentId/hide')
   @Permissions(permissionsEnum.SHOW_HIDE_COMMENT)
-  async hideComment(value = true, @Param() params, @Res() res: Response) {
+  async hideComment(value = true,
+    @Param('blogId') blogId,
+    @Param('commentId') commentId,
+    @Res() res: Response) {
     try {
-      const blogId = params.blogId;
-      const commentId = params.commentId;
       await this.blogService
         .hideOrShowComment(value, blogId, commentId)
         .then(() => {
@@ -294,12 +345,11 @@ export class BlogController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Delete('/:blogId/deleteOwnBlog')
   @Permissions(permissionsEnum.DELETE_OWN_BLOG)
-  async deleteOwnBlog(@Param() params, @Res() res: Response) {
+  async deleteOwnBlog(@Param('blogId') blogId, @Res() res: Response) {
     try {
-      const blogId = params.blogId;
       await this.blogService.deleteOwnBlog(blogId).then(() => {
         res.status(200).json({
           message: 'blog deleted successfully',
@@ -310,12 +360,11 @@ export class BlogController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Delete('/:blogId/deleteOthersBlog')
   @Permissions(permissionsEnum.UPDATE_OTHERS_BLOG)
-  async deleteOthersBlog(@Param() params, @Res() res: Response) {
+  async deleteOthersBlog(@Param('blogId') blogId, @Res() res: Response) {
     try {
-      const blogId = params.blogId;
       await this.blogService.deleteOthersBlog(blogId).then(() => {
         res.status(200).json({
           message: 'blog deleted successfully',
@@ -326,14 +375,12 @@ export class BlogController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Put('/:blogId/comment/:commentId/deleteOwnComment')
   // Delete comment is a put request because it does not delete the blog, it only removes a comment
   @Permissions(permissionsEnum.DELETE_OWN_COMMENT)
-  async deleteOwnComment(@Param() params, @Res() res: Response) {
+  async deleteOwnComment(@Param('blogId') blogId, @Param('commentId') commentId, @Res() res: Response) {
     try {
-      const commentId = params.commentId;
-      const blogId = params.blogId;
       await this.blogService.deleteOwnComment(blogId, commentId).then(() => {
         res.status(200).json({
           message: 'Comment deleted successfully',
@@ -344,14 +391,12 @@ export class BlogController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Put('/:blogId/comment/:commentId/deleteOwnComment')
   // Delete comment is a patch request because it does not delete the blog, it only removes a comment
   @Permissions(permissionsEnum.DELETE_OTHERS_COMMENT)
-  async deleteOthersComment(@Param() params, @Res() res: Response) {
+  async deleteOthersComment(@Param('blogId') blogId, @Param('commentId') commentId, @Res() res: Response) {
     try {
-      const blogId = params.blogId;
-      const commentId = params.commentId;
       await this.blogService.deleteOthersComment(blogId, commentId).then(() => {
         res.status(200).json({
           message: 'Comment deleted successfully',

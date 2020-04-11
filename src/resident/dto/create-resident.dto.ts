@@ -12,9 +12,6 @@ import {
 export class CreateResidentGalleryDto {
   @IsString()
   readonly picture!: string;
-
-  @IsString()
-  readonly pictureName!: string;
   @IsString()
   readonly occassionCaptured!: string;
   @IsDate()
@@ -126,6 +123,18 @@ export class CreateResidentDto {
   @IsString()
   readonly countryOfOrigin!: string;
   @IsString()
+  readonly nationalId?: string;
+  @IsString()
+  readonly bvn?: string;
+  @IsString()
+  readonly bloodGroup?: string;
+  @IsString()
+  readonly genotype?: string;
+  @IsString()
+  readonly physicalOrHealthChallenge?: string;
+  @IsString()
+  readonly criminalRecord?: string;
+  @IsString()
   readonly stateOfOrigin!: string;
   @IsString()
   readonly localGovtOfOrigin!: string;
@@ -160,6 +169,18 @@ export class ResidentWithoutArraysDto {
   readonly maritalStatus!: string;
   @IsString()
   readonly countryOfOrigin!: string;
+  @IsString()
+  readonly nationalId?: string;
+  @IsString()
+  readonly bvn?: string;
+  @IsString()
+  readonly bloodGroup?: string;
+  @IsString()
+  readonly genotype?: string;
+  @IsString()
+  readonly physicalOrHealthChallenge?: string;
+  @IsString()
+  readonly criminalRecord?: string;
   @IsString()
   readonly stateOfOrigin!: string;
   @IsString()
@@ -202,6 +223,18 @@ export class EditResidentDto {
   @IsString()
   @IsOptional()
   readonly countryOfOrigin?: string;
+  @IsString()
+  @IsOptional()
+  readonly nationalId?: string;
+  @IsOptional()
+  @IsString()
+  readonly bvn?: string;
+  @IsOptional()
+  @IsString()
+  readonly bloodGroup?: string;
+  @IsOptional()
+  @IsString()
+  readonly genotype?: string;
   @IsString()
   @IsOptional()
   readonly stateOfOrigin?: string;

@@ -12,16 +12,16 @@ import {
 import { NavFooterService } from './nav-footer.service';
 import { CreateNavFooterDto } from './dto/create-nav-footer.dto';
 import { Response } from 'express';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { AuthenticatedGuard } from 'src/auth/authenticated.guard';
 import { PermissionsGuard } from 'src/auth/permissions.guard';
 import { Permissions } from 'src/auth/permissions.decorator';
 import { permissionsEnum } from 'src/utils/permissions.enum';
 
 @Controller('/api/site/nav-footer')
 export class NavFooterController {
-  constructor(private readonly navFooterService: NavFooterService) {}
+  constructor(private readonly navFooterService: NavFooterService) { }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Post()
   @Permissions(permissionsEnum.CREATE_PUBLIC_SITE_DATA)
   async createNavFooter(
@@ -51,7 +51,7 @@ export class NavFooterController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Patch()
   @Permissions(permissionsEnum.UPDATE_PUBLIC_SITE_DATA)
   async editNavFooter(@Body() edit, @Res() res: Response) {

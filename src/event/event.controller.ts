@@ -14,16 +14,16 @@ import {
 import { EventService } from './event.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { Response } from 'express';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { AuthenticatedGuard } from 'src/auth/authenticated.guard';
 import { PermissionsGuard } from 'src/auth/permissions.guard';
 import { Permissions } from 'src/auth/permissions.decorator';
 import { permissionsEnum } from 'src/utils/permissions.enum';
 
 @Controller('/api/admin/event')
 export class EventController {
-  constructor(private readonly eventService: EventService) {}
+  constructor(private readonly eventService: EventService) { }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Post()
   @Permissions(permissionsEnum.CREATE_EVENTS)
   async createEvent(@Body() event: CreateEventDto, @Res() res: Response) {
@@ -38,7 +38,7 @@ export class EventController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Get()
   @Permissions(permissionsEnum.READ_EVENTS)
   async getAllEvents(@Res() res: Response) {
@@ -52,12 +52,11 @@ export class EventController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Get('/:eventId')
   @Permissions(permissionsEnum.READ_EVENTS)
-  async getEventDetail(@Param() params, @Res() res: Response) {
+  async getEventDetail(@Param('eventId') eventId, @Res() res: Response) {
     try {
-      const eventId = params.eventId;
       const result = await this.eventService.getEventDetail(eventId);
       if (result) {
         res.status(200).json(result);
@@ -67,16 +66,15 @@ export class EventController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Put('/:eventId')
   @Permissions(permissionsEnum.UPDATE_EVENTS)
   async updateEvent(
-    @Param() params,
+    @Param('eventId') eventId,
     @Body() edit,
     @Res() res: Response,
   ) {
     try {
-      const eventId = params.eventId;
       await this.eventService.updateEvent(eventId, edit).then(() => {
         res.status(201).json({
           message: 'An event edited successfully',
@@ -87,12 +85,11 @@ export class EventController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Delete('/:eventId')
   @Permissions(permissionsEnum.DELETE_EVENTS)
-  async deleteEvent(@Param() params, @Res() res: Response) {
+  async deleteEvent(@Param('eventId') eventId, @Res() res: Response) {
     try {
-      const eventId = params.eventId;
       await this.eventService.deleteEvent(eventId).then(() => {
         res.status(201).json({
           message: 'An event deleted successfully',

@@ -20,18 +20,24 @@ import {
   EditGalleryDto,
 } from './dto/create-gallery.dto';
 import { Response } from 'express';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { AuthenticatedGuard } from 'src/auth/authenticated.guard';
 import { PermissionsGuard } from 'src/auth/permissions.guard';
 import { Permissions } from 'src/auth/permissions.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { imageFileFilter } from 'src/utils/file-uploading.utils';
 import { permissionsEnum } from 'src/utils/permissions.enum';
+import { ConfigService } from '@nestjs/config';
+import { createWriteStream, unlink } from 'fs';
 
 @Controller('/api/admin/gallery')
 export class GalleryController {
-  constructor(private readonly galleryService: GalleryService) {}
+  uploadPath: string;
+  constructor(private readonly galleryService: GalleryService,
+    private readonly config: ConfigService) {
+    this.uploadPath = this.config.get<string>('UPLOAD_PATH')
+  }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Post()
   @Permissions(permissionsEnum.MANAGE_GALLERY)
   @UseInterceptors(
@@ -45,9 +51,14 @@ export class GalleryController {
     @UploadedFile() file?,
   ) {
     try {
-      const galleryPic = file.name;
+      const galleryPic = new Date().toISOString() + file.originalname;
       let theGallery: CreateGalleryDto = { ...picture, picture: galleryPic };
       await this.galleryService.uploadPicture(theGallery).then(() => {
+        // save file to disk
+        const path = this.uploadPath + galleryPic;
+        let fileStream = createWriteStream(path);
+        fileStream.write(file.buffer);
+        // Return response
         res.status(201).json({
           message: 'A picture added to the gallery successfully',
         });
@@ -70,9 +81,8 @@ export class GalleryController {
   }
 
   @Get('/:pictureId')
-  async pictureDetail(@Param() params, @Res() res: Response) {
+  async pictureDetail(@Param('pictureId') pictureId, @Res() res: Response) {
     try {
-      const pictureId = params.pictureId;
       const result = await this.galleryService.getPictureDetail(pictureId);
       if (result) {
         res.status(200).json(result);
@@ -82,7 +92,7 @@ export class GalleryController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Put('/:pictureId')
   @Permissions(permissionsEnum.MANAGE_GALLERY)
   @UseInterceptors(
@@ -91,36 +101,51 @@ export class GalleryController {
     }),
   )
   async editPicture(
-    @Param() params,
+    @Param('pictureId') pictureId,
     @Body() edit,
     @Res() res: Response,
     @UploadedFile() file?,
   ) {
     try {
-      const pictureId = params.pictureId;
       let theEdit: EditGalleryDto;
-      const galleryPic = file.name;
+      const galleryPic = new Date().toISOString() + file.originalname;
       if (file) {
         theEdit = { ...edit, picture: galleryPic };
+        const thisGallery = await this.galleryService.getPictureDetail(pictureId);
+        const oldFile = thisGallery.picture;
+        const oldFilePath = this.uploadPath + oldFile
+        await this.galleryService.updatePicture(pictureId, theEdit).then(() => {
+          //Delete the old file from disk
+          unlink(oldFilePath, err => {
+            if (err) throw err
+          })
+          //Save the new file to disk
+          const path = this.uploadPath + galleryPic;
+          let fileStream = createWriteStream(path);
+          fileStream.write(file.buffer);
+          //Return response
+          res.status(201).json({
+            message: 'A picture object has been edited successfully',
+          });
+        });
       } else {
         theEdit = { ...edit };
-      }
-      await this.galleryService.updatePicture(pictureId, theEdit).then(() => {
-        res.status(201).json({
-          message: 'A picture object has been edited successfully',
+        await this.galleryService.updatePicture(pictureId, theEdit).then(() => {
+          res.status(201).json({
+            message: 'A picture object has been edited successfully',
+          });
         });
-      });
+      }
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.NOT_MODIFIED);
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Put('/:pictureId/approve')
   @Permissions(permissionsEnum.MANAGE_GALLERY)
-  async approvePicture(@Param() params, value = true, @Res() res: Response) {
+  async approvePicture(@Param('pictureId') pictureId, value = true, @Res() res: Response) {
     try {
-      const pictureId = params.pictureId;
       await this.galleryService
         .approveOrDisapprovePicture(value, pictureId)
         .then(() => {
@@ -133,16 +158,15 @@ export class GalleryController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Put('/:pictureId/disapprove')
   @Permissions(permissionsEnum.MANAGE_GALLERY)
   async disapprovePicture(
-    @Param() params,
+    @Param('pictureId') pictureId,
     value = false,
     @Res() res: Response,
   ) {
     try {
-      const pictureId = params.pictureId;
       await this.galleryService
         .approveOrDisapprovePicture(value, pictureId)
         .then(() => {
@@ -155,12 +179,11 @@ export class GalleryController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Delete('/:pictureId')
   @Permissions(permissionsEnum.MANAGE_GALLERY)
-  async deletePicture(@Param() params, @Res() res: Response) {
+  async deletePicture(@Param('pictureId') pictureId, @Res() res: Response) {
     try {
-      const pictureId = params.pictureId;
       await this.galleryService.deletePicture(pictureId).then(() => {
         res.status(201).json({
           message: 'A picture has been deleted successfully',

@@ -49,6 +49,8 @@ export class CreateBlogWithoutPicDto {
 }
 
 export class BlogCommentDto {
+  @IsNotEmpty()
+  readonly _id: any;
   @IsObject()
   @IsNotEmpty()
   readonly comment: Object;
@@ -58,4 +60,18 @@ export class BlogCommentDto {
   @IsString()
   @IsNotEmpty()
   readonly commenterUserId: string;
+}
+
+
+export class BlogDto {
+  readonly _id: string;
+  readonly authorUserId!: string;
+  readonly title!: string;
+  readonly category!: string;
+  readonly pic!: string;
+  readonly body!: string;
+  readonly timestamp!: Date;
+  readonly comments: [];
+  readonly approved!: Boolean;
+  readonly approvedBy!: string;
 }

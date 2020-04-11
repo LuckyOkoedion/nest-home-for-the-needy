@@ -9,6 +9,8 @@ export const imageFileFilter = (req, file, callback) => {
   callback(null, true);
 };
 
+// Not yet used in this app
+
 export const editFileName = (req, file, callback) => {
   const name = file.originalname.split('.')[0];
   const fileExtName = extname(file.originalname);

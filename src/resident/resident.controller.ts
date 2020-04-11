@@ -10,6 +10,8 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { ResidentService } from './resident.service';
 import {
@@ -24,18 +26,23 @@ import {
   EditRelatedCoResidentDto,
 } from './dto/create-resident.dto';
 import { Response } from 'express';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { AuthenticatedGuard } from 'src/auth/authenticated.guard';
 import { PermissionsGuard } from 'src/auth/permissions.guard';
 import { Permissions } from 'src/auth/permissions.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { imageFileFilter } from 'src/utils/file-uploading.utils';
 import { permissionsEnum } from 'src/utils/permissions.enum';
+import { ConfigService } from '@nestjs/config';
+import { createWriteStream, unlink } from 'fs';
 
 @Controller('/api/admin/resident')
 export class ResidentController {
-  constructor(private readonly residentService: ResidentService) { }
+  uploadPath: string;
+  constructor(private readonly residentService: ResidentService, private readonly config: ConfigService) {
+    this.uploadPath = this.config.get<string>("UPLOAD_PATH")
+  }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Post()
   @Permissions(permissionsEnum.MANAGE_RESIDENTS)
   async createResident(
@@ -49,11 +56,11 @@ export class ResidentController {
         });
       });
     } catch (error) {
-      console.log(error);
+      // console.log(error);
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Get()
   @Permissions(permissionsEnum.READ_RESIDENTS)
   async getAllResidents(@Res() res: Response) {
@@ -63,11 +70,11 @@ export class ResidentController {
         res.status(200).json(result);
       }
     } catch (error) {
-      console.log(error);
+      // console.log(error);
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Get('/:residentId')
   @Permissions(permissionsEnum.READ_RESIDENTS)
   async residentDetail(@Param('residentId') residentId, @Res() res: Response) {
@@ -77,27 +84,26 @@ export class ResidentController {
         res.status(200).json(result);
       }
     } catch (error) {
-      console.log(error);
+      // console.log(error);
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Put('/:residentId')
   @Permissions(permissionsEnum.MANAGE_RESIDENTS)
-  async editResident(@Param() params, @Body() edit, @Res() res: Response) {
+  async editResident(@Param('residentId') residentId, @Body() edit, @Res() res: Response) {
     try {
-      const residentId = params.residentId;
       await this.residentService.editResident(residentId, edit).then(() => {
         res.status(200).json({
           message: "A resident's has been updated successfully",
         });
       });
     } catch (error) {
-      console.log(error);
+      // console.log(error);
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Put('/:residentId/addPicture')
   @Permissions(permissionsEnum.MANAGE_RESIDENTS)
   @UseInterceptors(
@@ -106,16 +112,14 @@ export class ResidentController {
     }),
   )
   async addPicsToGallery(
-    @Param() params,
+    @Param('residentId') residentId,
     @Body() edit: CreateResidentGalleryWithoutPicDto,
     @Res() res: Response,
     @UploadedFile() file?,
   ) {
     try {
-      const residentId = params.residentId;
       const thePicture: CreateResidentGalleryDto = {
-        picture: file.name,
-        pictureName: edit.pictureName,
+        picture: new Date().toISOString() + file.originalname,
         dateCaptured: edit.dateCaptured,
         occassionCaptured: edit.occassionCaptured,
       };
@@ -123,16 +127,22 @@ export class ResidentController {
       await this.residentService
         .addPicsToGallery(residentId, thePicture)
         .then(() => {
+          // save file to disk
+          const path = this.uploadPath + thePicture.picture;
+          let fileStream = createWriteStream(path);
+          fileStream.write(file.buffer);
+          // Return response
           res.status(200).json({
             message: "A resident's gallery has been updated successfully",
           });
         });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.EXPECTATION_FAILED)
+      // console.log(error);
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Put('/:residentId/:pictureId/editPicture')
   @Permissions(permissionsEnum.MANAGE_RESIDENTS)
   @UseInterceptors(
@@ -141,39 +151,48 @@ export class ResidentController {
     }),
   )
   async editGalleryPics(
-    @Param() params,
+    @Param('residentId') residentId,
+    @Param('pictureId') pictureId,
     @Body() edit: CreateResidentGalleryWithoutPicDto,
     @Res() res: Response,
     @UploadedFile() file?,
   ) {
     try {
-      const residentId = params.residentId;
-      const pictureId = params.pictureId;
       const thePicture: CreateResidentGalleryDto = {
-        picture: file.name,
-        pictureName: edit.pictureName,
+        picture: new Date().toISOString() + file.originalname,
         dateCaptured: edit.dateCaptured,
         occassionCaptured: edit.occassionCaptured,
       };
+      const oldPictureObject = await this.residentService.getParticularPictureFromGallery(residentId, pictureId);
+      const oldFile = oldPictureObject.picture;
+      const oldFilePath = this.uploadPath + oldFile
       await this.residentService
         .editGalleryPics(residentId, pictureId, thePicture)
         .then(() => {
+          //Delete the old file from disk
+          unlink(oldFilePath, err => {
+            if (err) throw err
+            // console.log(`successfully deleted ${oldFilePath}`);
+          })
+          //Save the new file to disk
+          const path = this.uploadPath + thePicture.picture;
+          let fileStream = createWriteStream(path);
+          fileStream.write(file.buffer);
+          //Return response
           res.status(200).json({
             message: "A resident's has been updated successfully",
           });
         });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.EXPECTATION_FAILED)
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Put('/:residentId/:pictureId/deletePicture')
   @Permissions(permissionsEnum.MANAGE_RESIDENTS)
-  async deleteGalleryPics(@Param() params, @Res() res: Response) {
+  async deleteGalleryPics(@Param('residentId') residentId, @Param('pictureId') pictureId, @Res() res: Response) {
     try {
-      const residentId = params.residentId;
-      const pictureId = params.pictureId;
       await this.residentService
         .deleteGalleryPics(residentId, pictureId)
         .then(() => {
@@ -182,20 +201,19 @@ export class ResidentController {
           });
         });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.EXPECTATION_FAILED)
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Put('/:residentId/addRelatedCoResident')
   @Permissions(permissionsEnum.MANAGE_RESIDENTS)
   async addRelatedCoResident(
-    @Param() params,
+    @Param('residentId') residentId,
     @Body() coResident: CreateRelatedCoResidentDto,
     @Res() res: Response,
   ) {
     try {
-      const residentId = params.residentId;
       await this.residentService
         .addRelatedCoResident(residentId, coResident)
         .then(() => {
@@ -205,21 +223,20 @@ export class ResidentController {
           });
         });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.EXPECTATION_FAILED)
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Put('/:residentId/:coResidentId/editCoResident')
   @Permissions(permissionsEnum.MANAGE_RESIDENTS)
   async editRelatedCoResident(
-    @Param() params,
+    @Param('residentId') residentId,
+    @Param('coResidentId') coResidentId,
     @Body() newResident: EditRelatedCoResidentDto,
     @Res() res: Response,
   ) {
     try {
-      const residentId = params.residentId;
-      const coResidentId = params.coResidentId;
       await this.residentService
         .editRelatedCoResident(residentId, coResidentId, newResident)
         .then(() => {
@@ -229,17 +246,15 @@ export class ResidentController {
           });
         });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.EXPECTATION_FAILED)
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Put('/:residentId/:coResidentId/deleteCoResident')
   @Permissions(permissionsEnum.MANAGE_RESIDENTS)
-  async deleteRelatedCoResident(@Param() params, @Res() res: Response) {
+  async deleteRelatedCoResident(@Param('residentId') residentId, @Param('coResidentId') coResidentId, @Res() res: Response) {
     try {
-      const residentId = params.residentId;
-      const coResidentId = params.coResidentId;
       await this.residentService
         .deleteRelatedCoResident(residentId, coResidentId)
         .then(() => {
@@ -249,20 +264,19 @@ export class ResidentController {
           });
         });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.EXPECTATION_FAILED)
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Put('/:residentId/addPersonalSponsor')
   @Permissions(permissionsEnum.MANAGE_RESIDENTS)
   async addPersonalSponsor(
-    @Param() params,
+    @Param('residentId') residentId,
     @Body() personalSponsor: CreatePersonalSponsorDto,
     @Res() res: Response,
   ) {
     try {
-      const residentId = params.residentId;
       await this.residentService
         .addPersonalSponsor(residentId, personalSponsor)
         .then(() => {
@@ -272,21 +286,20 @@ export class ResidentController {
           });
         });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.EXPECTATION_FAILED)
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Put('/:residentId/:sponsorId/editPersonalSponsor')
   @Permissions(permissionsEnum.MANAGE_RESIDENTS)
   async editPersonalSponsor(
-    @Param() params,
+    @Param('residentId') residentId,
+    @Param('sponsorId') sponsorId,
     @Body() newSponsor: EditPersonalSponsorDto,
     @Res() res: Response,
   ) {
     try {
-      const residentId = params.residentId;
-      const sponsorId = params.sponsorId;
       await this.residentService
         .editPersonalSponsor(residentId, sponsorId, newSponsor)
         .then(() => {
@@ -296,17 +309,15 @@ export class ResidentController {
           });
         });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.EXPECTATION_FAILED)
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Put('/:residentId/:sponsorId/deletePersonalSponsor')
   @Permissions(permissionsEnum.MANAGE_RESIDENTS)
-  async deletePersonalSponsor(@Param() params, @Res() res: Response) {
+  async deletePersonalSponsor(@Param('residentId') residentId, @Param('sponsorId') sponsorId, @Res() res: Response) {
     try {
-      const residentId = params.residentId;
-      const sponsorId = params.sponsorId;
       await this.residentService
         .deletePersonalSponsor(residentId, sponsorId)
         .then(() => {
@@ -316,23 +327,22 @@ export class ResidentController {
           });
         });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.EXPECTATION_FAILED)
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Delete('/:residentId/deleteResident')
   @Permissions(permissionsEnum.MANAGE_RESIDENTS)
-  async deleteResident(@Param() params, @Res() res: Response) {
+  async deleteResident(@Param('residentId') residentId, @Res() res: Response) {
     try {
-      const residentId = params.residentId;
       await this.residentService.deleteResident(residentId).then(() => {
         res.status(200).json({
           message: 'A resident has been deleted successfully',
         });
       });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, HttpStatus.EXPECTATION_FAILED)
     }
   }
 }

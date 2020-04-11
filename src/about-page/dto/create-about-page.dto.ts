@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsNumber, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString, IsNumber, IsOptional, IsNumberString } from 'class-validator';
 
 export class CreateAboutPageDto {
   @IsString()
@@ -10,7 +10,7 @@ export class CreateAboutPageDto {
   @IsString()
   @IsNotEmpty()
   readonly servedTitle: string;
-  @IsNumber()
+  @IsNumberString()
   @IsNotEmpty()
   readonly servedNo: number;
   @IsString()
@@ -42,35 +42,23 @@ export class CreateAboutPageDto {
   readonly latestDonationQuote: string;
   @IsString()
   @IsNotEmpty()
-  readonly bannerPic: string;
-  @IsString()
-  @IsNotEmpty()
   readonly bioPic: string;
-  @IsString()
-  @IsNotEmpty()
-  readonly donorName: string;
-  @IsString()
-  @IsNotEmpty()
-  readonly justNow: string;
-  @IsString()
-  @IsNotEmpty()
-  readonly donateFor: string;
-  @IsString()
-  @IsNotEmpty()
-  readonly donatePurpose: string;
 }
 
-export class CreateAboutPageWithoutPicturesDto {
+export class CreateAboutPageWithoutPictureDto {
   @IsString()
   @IsNotEmpty()
   readonly bigText: string;
+  @IsString()
+  @IsNotEmpty()
+  readonly bioTitle: string;
   @IsString()
   @IsNotEmpty()
   readonly biodesc: string;
   @IsString()
   @IsNotEmpty()
   readonly servedTitle: string;
-  @IsNumber()
+  @IsNumberString()
   @IsNotEmpty()
   readonly servedNo: number;
   @IsString()
@@ -100,18 +88,6 @@ export class CreateAboutPageWithoutPicturesDto {
   @IsString()
   @IsNotEmpty()
   readonly latestDonationQuote: string;
-  @IsString()
-  @IsNotEmpty()
-  readonly donorName: string;
-  @IsString()
-  @IsNotEmpty()
-  readonly justNow: string;
-  @IsString()
-  @IsNotEmpty()
-  readonly donateFor: string;
-  @IsString()
-  @IsNotEmpty()
-  readonly donatePurpose: string;
 }
 
 export class EditAboutPageDto {
@@ -120,12 +96,15 @@ export class EditAboutPageDto {
   readonly bigText?: string;
   @IsOptional()
   @IsString()
+  readonly bioTitle?: string;
+  @IsOptional()
+  @IsString()
   readonly biodesc?: string;
   @IsOptional()
   @IsString()
   readonly servedTitle?: string;
   @IsOptional()
-  @IsNumber()
+  @IsNumberString()
   readonly servedNo?: number;
   @IsOptional()
   @IsString()
@@ -156,19 +135,5 @@ export class EditAboutPageDto {
   readonly latestDonationQuote?: string;
   @IsOptional()
   @IsString()
-  readonly bannerPic?: string;
-  @IsOptional()
-  @IsString()
-  readonly bioPic?: string;
-  @IsString()
-  readonly donorName?: string;
-  @IsOptional()
-  @IsString()
-  readonly justNow?: string;
-  @IsOptional()
-  @IsString()
-  readonly donateFor?: string;
-  @IsOptional()
-  @IsString()
-  readonly donatePurpose?: string;
+  readonly bioPic: string;
 }

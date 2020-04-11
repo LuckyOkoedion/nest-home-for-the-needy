@@ -7,51 +7,64 @@ import {
   Res,
   UseGuards,
   UseInterceptors,
-  UploadedFiles,
   HttpException,
   HttpStatus,
+  UploadedFile,
 } from '@nestjs/common';
 import { AboutPageService } from './about-page.service';
 import {
   CreateAboutPageDto,
-  CreateAboutPageWithoutPicturesDto,
+  CreateAboutPageWithoutPictureDto,
   EditAboutPageDto,
 } from './dto/create-about-page.dto';
 import { Response } from 'express';
 import { PermissionsGuard } from 'src/auth/permissions.guard';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Permissions } from 'src/auth/permissions.decorator';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { permissionsEnum } from 'src/utils/permissions.enum';
+import { imageFileFilter } from 'src/utils/file-uploading.utils';
+import { AuthenticatedGuard } from 'src/auth/authenticated.guard';
+import { ConfigService } from '@nestjs/config';
+import { createWriteStream, unlink } from 'fs';
+
 
 @Controller('/api/site/about-page')
 export class AboutPageController {
-  constructor(private readonly aboutPageService: AboutPageService) {}
+  uploadPath: string;
+  constructor(private readonly aboutPageService: AboutPageService,
+    private readonly config: ConfigService) {
+    this.uploadPath = this.config.get<string>('UPLOAD_PATH')
+  }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Post()
   @Permissions(permissionsEnum.CREATE_PUBLIC_SITE_DATA)
   @UseInterceptors(
-    FileFieldsInterceptor([
-      { name: 'bioPic', maxCount: 1 },
-      { name: 'bannerPic', maxCount: 1 },
-    ]),
+    FileInterceptor('bioPic', {
+      fileFilter: imageFileFilter,
+    }),
   )
   async create(
-    @Body() aboutPageData: CreateAboutPageWithoutPicturesDto,
+    @Body() aboutPageData: CreateAboutPageWithoutPictureDto,
     @Res() res: Response,
-    @UploadedFiles() files: File[],
+    @UploadedFile() theBioPic,
   ) {
+    console.log(aboutPageData)
     try {
-      const bioPic = files[0].name;
-      const bannerPic = files[1].name;
-      let thePage: CreateAboutPageDto = {
+      const bioPic = new Date().toISOString() + theBioPic.originalname;
+      const thePage: CreateAboutPageDto = {
         ...aboutPageData,
         bioPic: bioPic,
-        bannerPic: bannerPic,
       };
 
+
+
       await this.aboutPageService.createAboutPageData(thePage).then(() => {
+        // save file to disk
+        const path = this.uploadPath + bioPic;
+        let fileStream = createWriteStream(path);
+        fileStream.write(theBioPic.buffer);
+        // Return response
         res.status(201).json({
           message: 'About page data created successfully.',
         });
@@ -73,32 +86,52 @@ export class AboutPageController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Patch()
   @Permissions(permissionsEnum.UPDATE_PUBLIC_SITE_DATA)
   @UseInterceptors(
-    FileFieldsInterceptor([
-      { name: 'bioPic', maxCount: 1 },
-      { name: 'bannerPic', maxCount: 1 },
-    ]),
+    FileInterceptor('bioPic', {
+      fileFilter: imageFileFilter,
+    }),
   )
   async edit(
     @Body() edit: EditAboutPageDto,
     @Res() res: Response,
-    @UploadedFiles() files?: File[],
+    @UploadedFile() theBioPic?,
   ) {
+    let theEdit: EditAboutPageDto;
     try {
-      let theEdit: EditAboutPageDto;
-      const bioPic = files[0].name;
-      const bannerPic = files[1].name;
-      if (files) {
-        theEdit = { ...edit, bioPic: bioPic, bannerPic: bannerPic };
-      }
-      await this.aboutPageService.updateAboutPageData(theEdit).then(() => {
-        res.status(200).json({
-          message: 'About page data updated successfully',
+      
+      const bioPic = new Date().toISOString() + theBioPic.originalname;
+      if (theBioPic) {
+        theEdit = { ...edit, bioPic: bioPic };
+        const thePage = await this.aboutPageService.getAboutPageData();
+        const oldFile = thePage.bioPic;
+        const oldFilePath = this.uploadPath + oldFile;
+        await this.aboutPageService.updateAboutPageData(theEdit).then(() => {
+          //Delete the old file from disk
+          unlink(oldFilePath, err => {
+            if (err) throw err
+          })
+          //Save the new file to disk
+          const path = this.uploadPath + bioPic;
+          let fileStream = createWriteStream(path);
+          fileStream.write(theBioPic.buffer);
+          //Return response
+          res.status(200).json({
+            message: 'About page data updated successfully',
+          });
         });
-      });
-    } catch (error) {}
+      } else {
+        theEdit = { ...edit }
+        console.log(theEdit)
+        await this.aboutPageService.updateAboutPageData(theEdit).then(() => {
+          res.status(200).json({
+            message: 'About page data updated successfully',
+          });
+        });
+      }
+
+    } catch (error) { }
   }
 }

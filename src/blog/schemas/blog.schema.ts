@@ -4,7 +4,7 @@ import { User } from 'src/user/schemas/user.schema';
 
 export class Comment {
   @IsString()
-  @prop({ default: new mongoose.Types.ObjectId() })
+  @prop()
   _id: string;
   @prop({
     ref: 'User',
@@ -34,8 +34,6 @@ export class Comment {
 }
 
 export class Blog {
-  @prop({ default: new mongoose.Types.ObjectId() })
-  _id: mongoose.Schema.Types.ObjectId;
   @prop({
     ref: 'User',
     required: true,
@@ -75,7 +73,6 @@ export class Blog {
   approved!: Boolean;
   @prop({
     ref: 'User',
-    required: true,
   })
-  approvedBy!: Ref<User>;
+  approvedBy?: Ref<User>;
 }

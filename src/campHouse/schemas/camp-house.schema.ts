@@ -7,8 +7,6 @@ export class ResidentItem {
 }
 
 export class CampHouse {
-  @prop({ default: new mongoose.Types.ObjectId() })
-  _id: mongoose.Schema.Types.ObjectId;
   @arrayProp({ items: ResidentItem })
   residents: ResidentItem[];
   @prop({ ref: 'Resident' })

@@ -9,7 +9,7 @@ export class DonationService {
   constructor(
     @InjectModel(Donation)
     private readonly DonationModel: ReturnModelType<typeof Donation>,
-  ) {}
+  ) { }
   async createDonation(donation: CreateDonationDto) {
     const createdDonation = await new this.DonationModel(donation);
     return createdDonation.save();
@@ -28,6 +28,6 @@ export class DonationService {
   }
 
   async deleteDonation(donationId) {
-    return await this.DonationModel.remove({ _id: donationId }).exec();
+    return await this.DonationModel.deleteOne({ _id: donationId }).exec();
   }
 }
