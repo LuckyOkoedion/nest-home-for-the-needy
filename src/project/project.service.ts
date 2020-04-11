@@ -9,7 +9,7 @@ export class ProjectService {
   constructor(
     @InjectModel(Project)
     private readonly ProjectModel: ReturnModelType<typeof Project>,
-  ) {}
+  ) { }
   async createProject(project: CreateProjectDto) {
     const createdProject = new this.ProjectModel(project);
     return createdProject.save();
@@ -28,6 +28,6 @@ export class ProjectService {
   }
 
   async deleteProject(projectId) {
-    return await this.ProjectModel.remove(projectId).exec();
+    return await this.ProjectModel.deleteOne(projectId).exec();
   }
 }

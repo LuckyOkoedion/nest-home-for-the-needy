@@ -12,16 +12,16 @@ import {
 import { CreateBlogPageDto } from './dto/create-blog-page.dto';
 import { BlogPageService } from './blog-page.service';
 import { Response } from 'express';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { AuthenticatedGuard } from 'src/auth/authenticated.guard';
 import { PermissionsGuard } from 'src/auth/permissions.guard';
 import { Permissions } from 'src/auth/permissions.decorator';
 import { permissionsEnum } from 'src/utils/permissions.enum';
 
 @Controller('/api/site/blog-page')
 export class BlogPageController {
-  constructor(private readonly blogPageService: BlogPageService) {}
+  constructor(private readonly blogPageService: BlogPageService) { }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Post()
   @Permissions(permissionsEnum.CREATE_PUBLIC_SITE_DATA)
   async createBlogPage(
@@ -51,7 +51,7 @@ export class BlogPageController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Patch()
   @Permissions(permissionsEnum.UPDATE_PUBLIC_SITE_DATA)
   async updateBlogPage(@Body() edit, @Res() res: Response) {

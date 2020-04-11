@@ -11,9 +11,6 @@ export class CreateGalleryDto {
   @IsString()
   @IsNotEmpty()
   readonly picture: string;
-  @IsString()
-  @IsNotEmpty()
-  readonly pictureName: string;
   @IsDate()
   @IsNotEmpty()
   readonly dateCaptured: Date;
@@ -29,9 +26,6 @@ export class CreateGalleryDto {
 }
 
 export class CreateGalleryWithoutPicDto {
-  @IsString()
-  @IsNotEmpty()
-  readonly pictureName: string;
   @IsDate()
   @IsNotEmpty()
   readonly dateCaptured: Date;
@@ -50,9 +44,6 @@ export class EditGalleryDto {
   @IsOptional()
   @IsString()
   readonly picture?: string;
-  @IsOptional()
-  @IsString()
-  readonly pictureName?: string;
   @IsOptional()
   @IsDate()
   readonly dateCaptured?: Date;

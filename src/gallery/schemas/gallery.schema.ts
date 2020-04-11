@@ -1,4 +1,4 @@
-import { prop, mongoose, arrayProp, Ref } from '@typegoose/typegoose';
+import { prop, arrayProp, Ref } from '@typegoose/typegoose';
 import { IsString, IsDate, IsBoolean, IsArray } from 'class-validator';
 import { User } from 'src/user/schemas/user.schema';
 
@@ -11,14 +11,9 @@ export class ThePeopleInPicture {
 }
 
 export class Gallery {
-  @prop({ default: new mongoose.Types.ObjectId() })
-  _id: mongoose.Schema.Types.ObjectId;
   @IsString()
   @prop({ required: true })
   picture: string;
-  @IsString()
-  @prop({ required: true })
-  pictureName: string;
   @IsDate()
   @prop({ required: true })
   dateCaptured: Date;

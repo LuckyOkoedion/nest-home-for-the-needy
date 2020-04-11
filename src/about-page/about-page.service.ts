@@ -12,7 +12,7 @@ export class AboutPageService {
   constructor(
     @InjectModel(AboutPage)
     private readonly AboutPageModel: ReturnModelType<typeof AboutPage>,
-  ) {}
+  ) { }
   async createAboutPageData(aboutPage: CreateAboutPageDto) {
     //Ensure that there is only one instance of the document in the database.
     const numberOfDocuments = await this.AboutPageModel.estimatedDocumentCount();
@@ -28,11 +28,12 @@ export class AboutPageService {
   }
 
   async getAboutPageData() {
-    const result = await this.AboutPageModel.findOne().exec();
+    const result = await this.AboutPageModel.find().exec();
     return result[0];
   }
 
   async updateAboutPageData(data: EditAboutPageDto) {
-    return await this.AboutPageModel.update({}, data).exec();
+    const theData = await this.getAboutPageData();
+    return await this.AboutPageModel.updateOne({ _id: theData._id }, data).exec();
   }
 }

@@ -15,8 +15,6 @@ export class TheNav {
 }
 
 export class NavFooter {
-  @prop({ default: new mongoose.Types.ObjectId() })
-  _id: mongoose.Schema.Types.ObjectId;
   @IsString()
   @prop({
     required: true,

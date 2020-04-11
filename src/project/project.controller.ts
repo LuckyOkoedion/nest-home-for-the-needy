@@ -14,16 +14,16 @@ import {
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { Response } from 'express';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { AuthenticatedGuard } from 'src/auth/authenticated.guard';
 import { PermissionsGuard } from 'src/auth/permissions.guard';
 import { Permissions } from 'src/auth/permissions.decorator';
 import { permissionsEnum } from 'src/utils/permissions.enum';
 
 @Controller('/api/admin/project')
 export class ProjectController {
-  constructor(private readonly projectService: ProjectService) {}
+  constructor(private readonly projectService: ProjectService) { }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Post()
   @Permissions(permissionsEnum.MANAGE_PROJECTS)
   async createProject(@Body() project: CreateProjectDto, @Res() res: Response) {
@@ -38,7 +38,7 @@ export class ProjectController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Get()
   @Permissions(permissionsEnum.READ_PROJECTS)
   async getAllProjects(@Res() res: Response) {
@@ -52,12 +52,11 @@ export class ProjectController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Get('/:projectId')
   @Permissions(permissionsEnum.READ_PROJECTS)
-  async getProjectDetail(@Param() params, @Res() res: Response) {
+  async getProjectDetail(@Param('projectId') projectId, @Res() res: Response) {
     try {
-      const projectId = params.projectId;
       const result = await this.projectService.getProjectDetail(projectId);
       if (result) {
         res.status(200).json(result);
@@ -67,16 +66,15 @@ export class ProjectController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Put('/:projectId')
   @Permissions(permissionsEnum.MANAGE_PROJECTS)
   async editProject(
-    @Param() params,
+    @Param('projectId') projectId,
     @Body() edit,
     @Res() res: Response,
   ) {
     try {
-      const projectId = params.projectId;
       await this.projectService.editProject(projectId, edit).then(() => {
         res.status(200).json({
           message: 'A project edited successfully',
@@ -87,12 +85,11 @@ export class ProjectController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Delete('/:projectId')
   @Permissions(permissionsEnum.MANAGE_PROJECTS)
-  async deleteProject(@Param() params, @Res() res: Response) {
+  async deleteProject(@Param('projectId') projectId, @Res() res: Response) {
     try {
-      const projectId = params.projectId;
       await this.projectService.deleteProject(projectId).then(() => {
         res.status(200).json({
           message: 'A project has been deleted successfully',

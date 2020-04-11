@@ -19,12 +19,6 @@ export class ResidentGallery {
     required: true,
   })
   picture!: string;
-
-  @IsString()
-  @prop({
-    required: true,
-  })
-  pictureName!: string;
   @IsString()
   @prop({
     required: true,
@@ -158,8 +152,6 @@ export class CurrentBenefits {
 }
 
 export class Resident {
-  @prop({ default: new mongoose.Types.ObjectId() })
-  _id: mongoose.Schema.Types.ObjectId;
   @IsString()
   @prop({
     required: true,
@@ -193,6 +185,24 @@ export class Resident {
     required: true,
   })
   countryOfOrigin!: string;
+  @IsString()
+  @prop()
+  nationalId?: string;
+  @IsString()
+  @prop()
+  bvn?: string;
+  @IsString()
+  @prop()
+  bloodGroup?: string;
+  @IsString()
+  @prop()
+  genotype?: string;
+  @IsString()
+  @prop()
+  physicalOrHealthChallenge?: string;
+  @IsString()
+  @prop()
+  criminalRecord?: string;
   @IsString()
   @prop({
     required: true,

@@ -18,18 +18,24 @@ import {
   EditHomePageDto,
 } from './dto/create-home-page.dto';
 import { Response } from 'express';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { AuthenticatedGuard } from 'src/auth/authenticated.guard';
 import { PermissionsGuard } from 'src/auth/permissions.guard';
 import { Permissions } from 'src/auth/permissions.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { imageFileFilter } from 'src/utils/file-uploading.utils';
 import { permissionsEnum } from 'src/utils/permissions.enum';
+import { ConfigService } from '@nestjs/config';
+import { createWriteStream, unlink } from 'fs';
 
 @Controller('/api/site/home-page')
 export class HomePageController {
-  constructor(private readonly homePageService: HomePageService) {}
+  uploadPath: string;
+  constructor(private readonly homePageService: HomePageService,
+    private readonly config: ConfigService) {
+    this.uploadPath = this.config.get<string>('UPLOAD_PATH')
+  }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Post()
   @Permissions(permissionsEnum.CREATE_PUBLIC_SITE_DATA)
   @UseInterceptors(
@@ -43,12 +49,17 @@ export class HomePageController {
     @UploadedFile() file?,
   ) {
     try {
-      const homePagePic = file.name;
+      const homePagePic = new Date().toISOString() + file.originalname;
       let thePage: CreateHomePageDto = {
         ...homePageData,
         bannerPic: homePagePic,
       };
       await this.homePageService.createHomePageData(thePage).then(() => {
+        // save file to disk
+        const path = this.uploadPath + homePagePic;
+        let fileStream = createWriteStream(path);
+        fileStream.write(file.buffer);
+        // Return response
         res.status(201).json({
           message: 'Home page data created successfully',
         });
@@ -70,7 +81,7 @@ export class HomePageController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Patch()
   @Permissions(permissionsEnum.UPDATE_PUBLIC_SITE_DATA)
   @UseInterceptors(
@@ -85,17 +96,36 @@ export class HomePageController {
   ) {
     try {
       let theEdit: EditHomePageDto;
-      const pagePic = file.name;
+      const pagePic = new Date().toISOString() + file.originalname;
       if (file) {
         theEdit = { ...edit, bannerPic: pagePic };
+        const thePage = await this.homePageService.getHomePageData();
+        const oldFIle = thePage.bannerPic;
+        const oldFilePath = this.uploadPath + oldFIle;
+        await this.homePageService.updateHomePageData(theEdit).then(() => {
+          //Delete the old file from disk
+          unlink(oldFilePath, err => {
+            if (err) throw err
+            // console.log(`successfully deleted ${oldFilePath}`);
+          })
+          //Save the new file to disk
+          const path = this.uploadPath + pagePic;
+          let fileStream = createWriteStream(path);
+          fileStream.write(file.buffer);
+          //Return response
+          res.status(200).json({
+            message: 'Home Page data edited successfully',
+          });
+        });
       } else {
         theEdit = { ...edit };
-      }
-      await this.homePageService.updateHomePageData(theEdit).then(() => {
-        res.status(200).json({
-          message: 'Home Page data edited successfully',
+        await this.homePageService.updateHomePageData(theEdit).then(() => {
+          res.status(200).json({
+            message: 'Home Page data edited successfully',
+          });
         });
-      });
+      }
+
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.NOT_MODIFIED);
     }

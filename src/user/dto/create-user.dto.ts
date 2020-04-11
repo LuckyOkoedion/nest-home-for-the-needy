@@ -34,6 +34,24 @@ export class CreateUserDto {
   readonly organisation: string;
 }
 
+export class UserDto {
+  readonly _id: string;
+  readonly firstName!: string;
+  readonly lastName!: string;
+  readonly gender: string;
+  readonly dateOfBirth: Date;
+  readonly email!: string;
+  readonly hasVerifiedEmail: boolean;
+  readonly phoneNo: string;
+  readonly password: string;
+  readonly profilePic?: string;
+  readonly nationality: string;
+  readonly religion: string;
+  readonly organisation: string;
+  readonly typeOfUser: string;
+  readonly accessLevel: number;
+}
+
 export class CreateUserWithoutPasswordDto {
   @IsString()
   @IsNotEmpty()
@@ -112,8 +130,8 @@ export class UserDataDto {
   @IsString()
   readonly userId: string;
   @IsString()
-  readonly clearanceLevel: string;
+  readonly clearanceLevel: number;
   @IsOptional()
   @IsArray()
-  readonly permissions?: [];
+  readonly permissions?: string[];
 }

@@ -16,7 +16,7 @@ export class ResidentService {
   constructor(
     @InjectModel(Resident)
     private readonly ResidentModel: ReturnModelType<typeof Resident>,
-  ) {}
+  ) { }
   async createResident(
     resident: ResidentWithoutArraysDto,
     picture?: CreateResidentGalleryDto,
@@ -246,6 +246,23 @@ export class ResidentService {
     );
   }
 
+  async getParticularPictureFromGallery(residentId: string, pictureId: string) {
+    const residentPicture = await this.ResidentModel.findById(
+      residentId,
+      async (err, res) => {
+        await res.gallery.filter(value => {
+          value._id === pictureId;
+        });
+      },
+    )
+      .exec()
+      .then(value => {
+        return value.gallery[0];
+      });
+
+    return residentPicture;
+  }
+
   async editRelatedCoResident(
     residentId,
     coResidentId: string,
@@ -355,6 +372,6 @@ export class ResidentService {
   }
 
   async deleteResident(residentId) {
-    return await this.ResidentModel.remove({ _id: residentId }).exec();
+    return await this.ResidentModel.deleteOne({ _id: residentId }).exec();
   }
 }

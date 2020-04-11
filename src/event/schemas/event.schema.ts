@@ -3,7 +3,6 @@ import {
   IsString,
   IsDate,
   IsObject,
-  IsPhoneNumber,
   IsBoolean,
   IsArray,
 } from 'class-validator';
@@ -36,8 +35,6 @@ export class TheInvitees {
 }
 
 export class Event {
-  @prop({ default: new mongoose.Types.ObjectId() })
-  _id: mongoose.Schema.Types.ObjectId;
   @IsString()
   @prop({ required: true })
   eventName: string;

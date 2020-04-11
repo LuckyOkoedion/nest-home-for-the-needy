@@ -7,8 +7,6 @@ import {
 } from 'class-validator';
 
 export class User {
-  @prop({ default: new mongoose.Types.ObjectId() })
-  _id: mongoose.Schema.Types.ObjectId;
   @IsString()
   @prop({
     required: true,
@@ -47,7 +45,7 @@ export class User {
   password: string;
   @IsString()
   @prop()
-  profilePic: string;
+  profilePic?: string;
   @IsString()
   @prop()
   nationality: string;

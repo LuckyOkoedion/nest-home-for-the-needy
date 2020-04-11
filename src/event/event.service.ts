@@ -9,7 +9,7 @@ export class EventService {
   constructor(
     @InjectModel(Event)
     private readonly EventModel: ReturnModelType<typeof Event>,
-  ) {}
+  ) { }
   async createEvent(event: CreateEventDto) {
     const createdEvent = await new this.EventModel(event);
     return createdEvent.save();
@@ -28,6 +28,6 @@ export class EventService {
   }
 
   async deleteEvent(eventId) {
-    return await this.EventModel.remove({ _id: eventId }).exec();
+    return await this.EventModel.deleteOne({ _id: eventId }).exec();
   }
 }

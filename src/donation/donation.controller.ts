@@ -14,16 +14,16 @@ import {
 import { DonationService } from './donation.service';
 import { CreateDonationDto } from './dto/create-donation.dto';
 import { Response } from 'express';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { AuthenticatedGuard } from 'src/auth/authenticated.guard';
 import { PermissionsGuard } from 'src/auth/permissions.guard';
 import { Permissions } from 'src/auth/permissions.decorator';
 import { permissionsEnum } from 'src/utils/permissions.enum';
 
 @Controller('/api/admin/donation')
 export class DonationController {
-  constructor(private readonly donationService: DonationService) {}
+  constructor(private readonly donationService: DonationService) { }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Post()
   @Permissions(permissionsEnum.MAKE_DONATIONS)
   async createDonation(
@@ -41,7 +41,7 @@ export class DonationController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Get()
   @Permissions(permissionsEnum.READ_DONATIONS)
   async getAllDonation(@Res() res: Response) {
@@ -55,9 +55,8 @@ export class DonationController {
     }
   }
   @Get('/:donationId')
-  async donationDetail(@Param() params, @Res() res: Response) {
+  async donationDetail(@Param('donationId') donationId, @Res() res: Response) {
     try {
-      const donationId = params.donationId;
       const donationDetail = await this.donationService.getDonationDetail(
         donationId,
       );
@@ -69,16 +68,15 @@ export class DonationController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Put('/:donationId')
   @Permissions(permissionsEnum.UPDATE_DONATIONS)
   async updateDonation(
-    @Param() params,
+    @Param('donationId') donationId,
     @Body() edit,
     @Res() res: Response,
   ) {
     try {
-      const donationId = params.donationId
       await this.donationService.updateDonation(donationId, edit).then(() => {
         res.status(200).json({
           message: 'A donation data updated successfully',
@@ -89,12 +87,11 @@ export class DonationController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(AuthenticatedGuard, PermissionsGuard)
   @Delete('/:donationId')
   @Permissions(permissionsEnum.DELETE_DONATIONS)
-  async deleteDonation(@Param() params, @Res() res: Response) {
+  async deleteDonation(@Param('donationId') donationId, @Res() res: Response) {
     try {
-      const donationId = params.donationId;
       await this.donationService.deleteDonation(donationId).then(() => {
         res.status(200).json({
           message: 'A donation record deleted successfully',

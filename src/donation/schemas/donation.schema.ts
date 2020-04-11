@@ -4,8 +4,6 @@ import { User } from 'src/user/schemas/user.schema';
 import { Project } from 'src/project/schemas/project.schema';
 
 export class Donation {
-  @prop({ default: new mongoose.Types.ObjectId() })
-  _id: mongoose.Schema.Types.ObjectId;
   @IsString()
   @prop({
     ref: 'User',

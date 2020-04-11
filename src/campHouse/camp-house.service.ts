@@ -1,4 +1,4 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateCampHouseDto } from './dto/create-camp-house.dto';
 import { InjectModel } from "nestjs-typegoose";
 import { ReturnModelType } from '@typegoose/typegoose';
@@ -9,7 +9,7 @@ export class CampHouseService {
   constructor(
     @InjectModel(CampHouse)
     private readonly CampHouseModel: ReturnModelType<typeof CampHouse>,
-  ) {}
+  ) { }
   async createCampHouse(campHouse: CreateCampHouseDto) {
     const createdCamphouse = await new this.CampHouseModel(campHouse);
     return createdCamphouse.save();
@@ -28,6 +28,6 @@ export class CampHouseService {
   }
 
   async deleteCampHouse(campHouseId) {
-    return await this.CampHouseModel.remove({ _id: campHouseId }).exec();
+    return await this.CampHouseModel.deleteOne({ _id: campHouseId }).exec();
   }
 }

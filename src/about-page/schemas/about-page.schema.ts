@@ -1,10 +1,16 @@
-import { prop } from '@typegoose/typegoose';
+import { prop, mongoose } from '@typegoose/typegoose';
 import { IsString, IsNumber } from 'class-validator';
 
 export class AboutPage {
   @IsString()
+  @prop({ default: new mongoose.Types.ObjectId() })
+  _id: mongoose.Schema.Types.ObjectId;
+  @IsString()
   @prop()
   bigText: string;
+  @IsString()
+  @prop()
+  bioTitle: string;
   @IsString()
   @prop()
   biodesc: string;
@@ -43,20 +49,5 @@ export class AboutPage {
   latestDonationQuote: string;
   @IsString()
   @prop()
-  bannerPic: string;
-  @IsString()
-  @prop()
   bioPic: string;
-  @IsString()
-  @prop()
-  donorName: string;
-  @IsString()
-  @prop()
-  justNow: string;
-  @IsString()
-  @prop()
-  donateFor: string;
-  @IsString()
-  @prop()
-  donatePurpose: string;
 }
